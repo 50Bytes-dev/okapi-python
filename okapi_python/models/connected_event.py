@@ -20,11 +20,11 @@ class ConnectedEvent:
 
     Attributes:
         id (UUID): The event id, the same on every retry; dedupe by it
-        type_ (Literal['Connected']):
+        type_ (Literal['Connected']): The event type (`EventType`); each event fixes its own
         account_id (UUID):
         account_name (str):
         timestamp (int): Unix time in seconds of the event Example: 1794500000.
-        data (ConnectedEventData):
+        data (ConnectedEventData): The event's data, an object; each event gives its shape
     """
 
     id: UUID

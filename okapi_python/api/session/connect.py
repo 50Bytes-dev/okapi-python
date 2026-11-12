@@ -38,10 +38,20 @@ def _parse_response(
 
         return response_409
 
+    if response.status_code == 413:
+        response_413 = ErrorResponse.from_dict(response.json())
+
+        return response_413
+
     if response.status_code == 500:
         response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
+
+    if response.status_code == 503:
+        response_503 = ErrorResponse.from_dict(response.json())
+
+        return response_503
 
     if response.status_code >= 400:
         # okapi-python: every error of the gateway is the ErrorResponse envelope, also on a status the schema does

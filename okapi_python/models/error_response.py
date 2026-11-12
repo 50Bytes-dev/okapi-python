@@ -30,6 +30,8 @@ class ErrorResponse:
             `POST /session/resume`.
         rejected_attachments (list[int] | Unset): `attachment_rejected`: the indexes of the unusable attachments
             Example: [1].
+        retry_after_ms (int | Unset): When the call may come again, in milliseconds (`upload_failed` while the gateway
+            is busy with other photos) Example: 1000.
     """
 
     success: bool
@@ -38,6 +40,7 @@ class ErrorResponse:
     upstream_code: str | Unset = UNSET
     pause: Pause | Unset = UNSET
     rejected_attachments: list[int] | Unset = UNSET
+    retry_after_ms: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -57,6 +60,8 @@ class ErrorResponse:
         if not isinstance(self.rejected_attachments, Unset):
             rejected_attachments = self.rejected_attachments
 
+        retry_after_ms = self.retry_after_ms
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -72,6 +77,8 @@ class ErrorResponse:
             field_dict["pause"] = pause
         if rejected_attachments is not UNSET:
             field_dict["rejectedAttachments"] = rejected_attachments
+        if retry_after_ms is not UNSET:
+            field_dict["retryAfterMs"] = retry_after_ms
 
         return field_dict
 
@@ -97,6 +104,8 @@ class ErrorResponse:
 
         rejected_attachments = cast(list[int], d.pop("rejectedAttachments", UNSET))
 
+        retry_after_ms = d.pop("retryAfterMs", UNSET)
+
         error_response = cls(
             success=success,
             code=code,
@@ -104,6 +113,7 @@ class ErrorResponse:
             upstream_code=upstream_code,
             pause=pause,
             rejected_attachments=rejected_attachments,
+            retry_after_ms=retry_after_ms,
         )
 
         error_response.additional_properties = d

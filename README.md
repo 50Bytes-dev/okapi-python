@@ -4,7 +4,7 @@ personal OK.ru (Odnoklassniki) accounts and works from them through OK's web mes
 scanned in the OK app; sending text and photos to people and chats with idempotency by `ref`; editing and deleting
 messages; history, read marks, typing; chats, their members, users; and incoming events as signed webhooks. One
 gateway serves many accounts; an account is a token, a webhook, a proxy and one OK login. This package follows
-okapi's version (0.1.0).
+okapi's version (0.1.1).
 
 The package is generated from the gateway's OpenAPI schema (`static/api/spec.yml` in okapi; the gateway serves it at
 `/api/spec.yml`, with the Swagger UI at `/api/`). The full contract, with every code and when it comes, is
@@ -112,8 +112,8 @@ group chat's negative.
 Every error is the envelope `{"success": false, "code": "...", "error": "...", ...}`, parsed as `ErrorResponse`.
 Branch on `code` (and the HTTP status), never on `error`: it is a fixed English text per case. The details come with
 the codes that name them: `upstream_code` (OK's error string, e.g. `chat.denied`), `pause` (`409 paused`) and
-`rejected_attachments` (`attachment_rejected`). `retryAfterMs` (`502 upload_failed` while the gateway is busy with
-other photos) is not in the schema's `ErrorResponse`: read it as `res.additional_properties.get("retryAfterMs")`.
+`rejected_attachments` (`attachment_rejected`) and `retry_after_ms` (`502 upload_failed` while the gateway is busy
+with other photos).
 
 An envelope parses as `ErrorResponse` on any status of 400 and above, also one the schema does not list for that call.
 Another body on an unlisted status is `None` (or `errors.UnexpectedStatus` with `raise_on_unexpected_status=True`);
@@ -402,11 +402,6 @@ uv run ruff check . && uv run ruff format --check .
 `generate.sh` runs `openapi-python-client` from the dev group and moves the generated `okapi_client` package to
 `okapi_python`. `okapi_python/webhooks.py` is hand-written and kept across a regeneration. The generator is pinned
 below 0.29: 0.29 writes code that needs Python 3.11 (`typing.Self`), and the package supports 3.10.
-
-Before generating, `generate.sh` drops the `type` keyword of `EventEnvelope`'s `type` and `data` in a copy of the
-schema. Each event is `allOf` the envelope and its own `type` (a const) and `data`; the generator cannot merge a
-string with a const (it drops the event) and of two `data` objects keeps the envelope's empty one. Each event narrows
-both fields, so the copy accepts the same bodies.
 
 The templates override three of the generator's:
 

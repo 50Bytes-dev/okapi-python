@@ -181,7 +181,7 @@ def test_health_takes_no_token_and_parses_the_degraded_answer():
         {
             "success": False,
             "status": "degraded",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "uptimeSeconds": 12,
             "db": False,
             "accounts": 0,
@@ -223,6 +223,24 @@ def test_a_json_upload_is_sent_as_json():
     assert json.loads(rec.requests[0].content) == {"url": "https://example.com/photo.jpg"}
 
 
+def test_a_busy_gateway_tells_when_to_upload_again():
+    rec = Recorder(
+        502,
+        {
+            "success": False,
+            "code": "upload_failed",
+            "error": "the gateway is busy with other photos; try again",
+            "retryAfterMs": 1000,
+        },
+    )
+    res = upload_media.sync(client=account_client(rec), body=UploadMediaRequest(url="https://example.com/photo.jpg"))
+
+    assert isinstance(res, ErrorResponse)
+    assert res.code == "upload_failed"
+    assert res.retry_after_ms == 1000
+    assert "retryAfterMs" not in res.additional_properties
+
+
 def test_a_qr_login_answers_the_qr_and_its_code():
     rec = Recorder(
         200,
@@ -244,7 +262,7 @@ def test_a_qr_login_answers_the_qr_and_its_code():
     assert res.login.failure is UNSET
 
 
-@pytest.mark.parametrize("status", [400, 401, 409, 500, 502, 503, 504])
+@pytest.mark.parametrize("status", [400, 401, 403, 404, 409, 413, 422, 500, 503, 504])
 def test_every_documented_error_status_of_a_send_is_an_error_response(status):
     rec = Recorder(status, {"success": False, "code": "some_code", "error": "text"})
     res = send_message.sync(client=account_client(rec), body=SendMessageRequest(chat_id=1, text="x"))
