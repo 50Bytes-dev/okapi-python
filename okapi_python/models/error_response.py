@@ -32,6 +32,8 @@ class ErrorResponse:
             Example: [1].
         retry_after_ms (int | Unset): When the call may come again, in milliseconds (`upload_failed` while the gateway
             is busy with other photos) Example: 1000.
+        photo_id (str | Unset): `description_failed`: the id of the photo that is uploaded without its description
+            Example: 1011458234641.
     """
 
     success: bool
@@ -41,6 +43,7 @@ class ErrorResponse:
     pause: Pause | Unset = UNSET
     rejected_attachments: list[int] | Unset = UNSET
     retry_after_ms: int | Unset = UNSET
+    photo_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -62,6 +65,8 @@ class ErrorResponse:
 
         retry_after_ms = self.retry_after_ms
 
+        photo_id = self.photo_id
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -79,6 +84,8 @@ class ErrorResponse:
             field_dict["rejectedAttachments"] = rejected_attachments
         if retry_after_ms is not UNSET:
             field_dict["retryAfterMs"] = retry_after_ms
+        if photo_id is not UNSET:
+            field_dict["photoId"] = photo_id
 
         return field_dict
 
@@ -106,6 +113,8 @@ class ErrorResponse:
 
         retry_after_ms = d.pop("retryAfterMs", UNSET)
 
+        photo_id = d.pop("photoId", UNSET)
+
         error_response = cls(
             success=success,
             code=code,
@@ -114,6 +123,7 @@ class ErrorResponse:
             pause=pause,
             rejected_attachments=rejected_attachments,
             retry_after_ms=retry_after_ms,
+            photo_id=photo_id,
         )
 
         error_response.additional_properties = d

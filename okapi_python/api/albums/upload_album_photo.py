@@ -1,0 +1,344 @@
+from http import HTTPStatus
+from typing import Any
+from urllib.parse import quote
+
+import httpx
+
+from ... import errors
+from ...client import AuthenticatedClient, Client
+from ...models.error_response import ErrorResponse
+from ...models.photo_response import PhotoResponse
+from ...models.upload_album_photo_form import UploadAlbumPhotoForm
+from ...models.upload_album_photo_request import UploadAlbumPhotoRequest
+from ...types import UNSET, Response, Unset
+
+
+def _get_kwargs(
+    album_id: str,
+    *,
+    body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
+
+    _kwargs: dict[str, Any] = {
+        "method": "post",
+        "url": "/albums/{album_id}/photos".format(
+            album_id=quote(str(album_id), safe=""),
+        ),
+    }
+
+    if isinstance(body, UploadAlbumPhotoForm):
+        _kwargs["files"] = body.to_multipart()
+
+    if isinstance(body, UploadAlbumPhotoRequest):
+        _kwargs["json"] = body.to_dict()
+
+        headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
+
+
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> ErrorResponse | PhotoResponse | None:
+    if response.status_code == 200:
+        response_200 = PhotoResponse.from_dict(response.json())
+
+        return response_200
+
+    if response.status_code == 400:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = ErrorResponse.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = ErrorResponse.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
+
+    if response.status_code == 409:
+        response_409 = ErrorResponse.from_dict(response.json())
+
+        return response_409
+
+    if response.status_code == 413:
+        response_413 = ErrorResponse.from_dict(response.json())
+
+        return response_413
+
+    if response.status_code == 422:
+        response_422 = ErrorResponse.from_dict(response.json())
+
+        return response_422
+
+    if response.status_code == 429:
+        response_429 = ErrorResponse.from_dict(response.json())
+
+        return response_429
+
+    if response.status_code == 500:
+        response_500 = ErrorResponse.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 502:
+        response_502 = ErrorResponse.from_dict(response.json())
+
+        return response_502
+
+    if response.status_code == 503:
+        response_503 = ErrorResponse.from_dict(response.json())
+
+        return response_503
+
+    if response.status_code == 504:
+        response_504 = ErrorResponse.from_dict(response.json())
+
+        return response_504
+
+    if response.status_code >= 400:
+        # okapi-python: every error of the gateway is the ErrorResponse envelope, also on a status the schema does
+        # not list for this call.
+        try:
+            error_body = response.json()
+        except ValueError:
+            error_body = None
+        if (
+            isinstance(error_body, dict)
+            and error_body.get("success") is False
+            and isinstance(error_body.get("code"), str)
+        ):
+            return ErrorResponse.from_dict(error_body)
+
+    if client.raise_on_unexpected_status:
+        raise errors.UnexpectedStatus(response.status_code, response.content)
+    else:
+        return None
+
+
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[ErrorResponse | PhotoResponse]:
+    return Response(
+        status_code=HTTPStatus(response.status_code),
+        content=response.content,
+        headers=response.headers,
+        parsed=_parse_response(client=client, response=response),
+    )
+
+
+def sync_detailed(
+    album_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
+) -> Response[ErrorResponse | PhotoResponse]:
+    """Upload a photo into an album
+
+     Uploads a photo into the album and sets its `description` when one is
+    given. Send it as multipart (`file`, and `description` as a text field
+    before or after it) or as JSON with either `url` (fetched by the gateway;
+    internal addresses are refused) or `data` (base64 or a base64 data URL),
+    and `description`.
+
+    The photo is prepared for OK's albums first. An upright JPEG of at most
+    2560 px a side goes **as it came**, metadata included; anything else (PNG,
+    WebP, GIF, BMP, a larger or EXIF-turned JPEG) is decoded, turned upright,
+    fitted into 2560×2560 px and re-encoded as a JPEG at quality 0.9. OK
+    stores every photo as its own JPEG.
+
+    The description (at most 4096 UTF-16 units) is checked before anything
+    is uploaded. When the photo is up and OK does not take its description,
+    the answer is `502 description_failed` with the `photoId`: set the text
+    again with `PATCH`, do not upload again.
+
+    There is no `ref`: after `504 timeout`, list the album to see whether the
+    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
+    `429 photo_limit`; the gateway keeps no pace of its own.
+
+    Args:
+        album_id (str):
+        body (UploadAlbumPhotoForm):
+        body (UploadAlbumPhotoRequest): Exactly one of `url` and `data`
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[ErrorResponse | PhotoResponse]
+    """
+
+    kwargs = _get_kwargs(
+        album_id=album_id,
+        body=body,
+    )
+
+    response = client.get_httpx_client().request(
+        **kwargs,
+    )
+
+    return _build_response(client=client, response=response)
+
+
+def sync(
+    album_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
+) -> ErrorResponse | PhotoResponse | None:
+    """Upload a photo into an album
+
+     Uploads a photo into the album and sets its `description` when one is
+    given. Send it as multipart (`file`, and `description` as a text field
+    before or after it) or as JSON with either `url` (fetched by the gateway;
+    internal addresses are refused) or `data` (base64 or a base64 data URL),
+    and `description`.
+
+    The photo is prepared for OK's albums first. An upright JPEG of at most
+    2560 px a side goes **as it came**, metadata included; anything else (PNG,
+    WebP, GIF, BMP, a larger or EXIF-turned JPEG) is decoded, turned upright,
+    fitted into 2560×2560 px and re-encoded as a JPEG at quality 0.9. OK
+    stores every photo as its own JPEG.
+
+    The description (at most 4096 UTF-16 units) is checked before anything
+    is uploaded. When the photo is up and OK does not take its description,
+    the answer is `502 description_failed` with the `photoId`: set the text
+    again with `PATCH`, do not upload again.
+
+    There is no `ref`: after `504 timeout`, list the album to see whether the
+    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
+    `429 photo_limit`; the gateway keeps no pace of its own.
+
+    Args:
+        album_id (str):
+        body (UploadAlbumPhotoForm):
+        body (UploadAlbumPhotoRequest): Exactly one of `url` and `data`
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        ErrorResponse | PhotoResponse
+    """
+
+    return sync_detailed(
+        album_id=album_id,
+        client=client,
+        body=body,
+    ).parsed
+
+
+async def asyncio_detailed(
+    album_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
+) -> Response[ErrorResponse | PhotoResponse]:
+    """Upload a photo into an album
+
+     Uploads a photo into the album and sets its `description` when one is
+    given. Send it as multipart (`file`, and `description` as a text field
+    before or after it) or as JSON with either `url` (fetched by the gateway;
+    internal addresses are refused) or `data` (base64 or a base64 data URL),
+    and `description`.
+
+    The photo is prepared for OK's albums first. An upright JPEG of at most
+    2560 px a side goes **as it came**, metadata included; anything else (PNG,
+    WebP, GIF, BMP, a larger or EXIF-turned JPEG) is decoded, turned upright,
+    fitted into 2560×2560 px and re-encoded as a JPEG at quality 0.9. OK
+    stores every photo as its own JPEG.
+
+    The description (at most 4096 UTF-16 units) is checked before anything
+    is uploaded. When the photo is up and OK does not take its description,
+    the answer is `502 description_failed` with the `photoId`: set the text
+    again with `PATCH`, do not upload again.
+
+    There is no `ref`: after `504 timeout`, list the album to see whether the
+    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
+    `429 photo_limit`; the gateway keeps no pace of its own.
+
+    Args:
+        album_id (str):
+        body (UploadAlbumPhotoForm):
+        body (UploadAlbumPhotoRequest): Exactly one of `url` and `data`
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[ErrorResponse | PhotoResponse]
+    """
+
+    kwargs = _get_kwargs(
+        album_id=album_id,
+        body=body,
+    )
+
+    response = await client.get_async_httpx_client().request(**kwargs)
+
+    return _build_response(client=client, response=response)
+
+
+async def asyncio(
+    album_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
+) -> ErrorResponse | PhotoResponse | None:
+    """Upload a photo into an album
+
+     Uploads a photo into the album and sets its `description` when one is
+    given. Send it as multipart (`file`, and `description` as a text field
+    before or after it) or as JSON with either `url` (fetched by the gateway;
+    internal addresses are refused) or `data` (base64 or a base64 data URL),
+    and `description`.
+
+    The photo is prepared for OK's albums first. An upright JPEG of at most
+    2560 px a side goes **as it came**, metadata included; anything else (PNG,
+    WebP, GIF, BMP, a larger or EXIF-turned JPEG) is decoded, turned upright,
+    fitted into 2560×2560 px and re-encoded as a JPEG at quality 0.9. OK
+    stores every photo as its own JPEG.
+
+    The description (at most 4096 UTF-16 units) is checked before anything
+    is uploaded. When the photo is up and OK does not take its description,
+    the answer is `502 description_failed` with the `photoId`: set the text
+    again with `PATCH`, do not upload again.
+
+    There is no `ref`: after `504 timeout`, list the album to see whether the
+    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
+    `429 photo_limit`; the gateway keeps no pace of its own.
+
+    Args:
+        album_id (str):
+        body (UploadAlbumPhotoForm):
+        body (UploadAlbumPhotoRequest): Exactly one of `url` and `data`
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        ErrorResponse | PhotoResponse
+    """
+
+    return (
+        await asyncio_detailed(
+            album_id=album_id,
+            client=client,
+            body=body,
+        )
+    ).parsed

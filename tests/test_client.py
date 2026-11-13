@@ -5,6 +5,7 @@ import pytest
 
 from okapi_python import AuthenticatedClient, Client
 from okapi_python.api.admin import create_account
+from okapi_python.api.albums import list_group_albums, update_group_album, upload_group_album_photo
 from okapi_python.api.chats import list_chats
 from okapi_python.api.health import get_health
 from okapi_python.api.login import start_qr_login
@@ -12,6 +13,9 @@ from okapi_python.api.media import upload_media
 from okapi_python.api.messages import send_message
 from okapi_python.api.session import connect
 from okapi_python.models import (
+    Album,
+    AlbumListResponse,
+    AlbumResponse,
     ChatType,
     CreateAccountRequest,
     CreateAccountResponse,
@@ -21,8 +25,11 @@ from okapi_python.models import (
     LoginResponse,
     LoginStep,
     PauseReason,
+    PhotoResponse,
     SendMessageRequest,
     SendMessageResponse,
+    UpdateGroupAlbumRequest,
+    UploadAlbumPhotoForm,
     UploadMediaForm,
     UploadMediaRequest,
     UploadMediaResponse,
@@ -239,6 +246,103 @@ def test_a_busy_gateway_tells_when_to_upload_again():
     assert res.code == "upload_failed"
     assert res.retry_after_ms == 1000
     assert "retryAfterMs" not in res.additional_properties
+
+
+def test_an_album_photo_goes_with_its_description_in_one_form():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "photo": {
+                "photoId": "1011463854865",
+                "albumId": "1011463757073",
+                "groupId": 70000060985873,
+                "description": "Куртка, 46",
+                "width": 1200,
+                "height": 900,
+            },
+        },
+    )
+    res = upload_group_album_photo.sync(
+        70000060985873,
+        "1011463757073",
+        client=account_client(rec),
+        body=UploadAlbumPhotoForm(
+            file=File(payload=b"\xff\xd8\xff", file_name="photo.jpg", mime_type="image/jpeg"), description="Куртка, 46"
+        ),
+    )
+
+    assert isinstance(res, PhotoResponse)
+    assert res.photo.photo_id == "1011463854865"
+    assert res.photo.description == "Куртка, 46"
+    req = rec.requests[0]
+    assert req.url.path == "/groups/70000060985873/albums/1011463757073/photos"
+    assert req.headers["Content-Type"].startswith("multipart/form-data; boundary=")
+    assert b'name="file"; filename="photo.jpg"' in req.content
+    assert b'name="description"' in req.content and "Куртка, 46".encode() in req.content
+
+
+def test_a_photo_whose_description_failed_is_named_in_the_error():
+    rec = Recorder(
+        502,
+        {
+            "success": False,
+            "code": "description_failed",
+            "error": "the photo is uploaded, its description is not; set it with PATCH",
+            "photoId": "1011463854865",
+        },
+    )
+    res = upload_group_album_photo.sync(
+        70000060985873,
+        "1011463757073",
+        client=account_client(rec),
+        body=UploadAlbumPhotoForm(file=File(payload=b"\xff\xd8\xff", file_name="photo.jpg"), description="x"),
+    )
+
+    assert isinstance(res, ErrorResponse)
+    assert res.code == "description_failed"
+    assert res.photo_id == "1011463854865"
+
+
+def test_an_album_list_leaves_the_settings_it_did_not_read_unset():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "albums": [{"albumId": "1011463757073", "groupId": 70000060985873, "title": "Товары", "photosCount": 2}],
+        },
+    )
+    res = list_group_albums.sync(70000060985873, client=account_client(rec))
+
+    assert isinstance(res, AlbumListResponse)
+    album = res.albums[0]
+    assert isinstance(album, Album)
+    assert (album.album_id, album.group_id, album.photos_count) == ("1011463757073", 70000060985873, 2)
+    assert album.pinned is UNSET and album.admins_only is UNSET and album.visibility is UNSET
+
+
+def test_an_album_change_sends_only_the_fields_it_names():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "album": {
+                "albumId": "1011463757073",
+                "groupId": 70000060985873,
+                "title": "Товары",
+                "pinned": True,
+                "adminsOnly": False,
+            },
+        },
+    )
+    res = update_group_album.sync(
+        70000060985873, "1011463757073", client=account_client(rec), body=UpdateGroupAlbumRequest(pinned=True)
+    )
+
+    assert isinstance(res, AlbumResponse)
+    assert res.album.pinned is True and res.album.admins_only is False
+    assert rec.requests[0].method == "PATCH"
+    assert json.loads(rec.requests[0].content) == {"pinned": True}
 
 
 def test_a_qr_login_answers_the_qr_and_its_code():

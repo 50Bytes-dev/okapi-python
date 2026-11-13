@@ -2,9 +2,9 @@
 A client library for accessing OKAPI (https://github.com/50Bytes-dev/okapi), the gateway that holds logins into
 personal OK.ru (Odnoklassniki) accounts and works from them through OK's web messenger: login by OK's own QR code,
 scanned in the OK app; sending text and photos to people and chats with idempotency by `ref`; editing and deleting
-messages; history, read marks, typing; chats, their members, users; and incoming events as signed webhooks. One
-gateway serves many accounts; an account is a token, a webhook, a proxy and one OK login. This package follows
-okapi's version (0.1.1).
+messages; history, read marks, typing; chats, their members, users; photo albums of the account and of the groups it
+moderates, with photos and their descriptions; and incoming events as signed webhooks. One gateway serves many
+accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.2.0).
 
 The package is generated from the gateway's OpenAPI schema (`static/api/spec.yml` in okapi; the gateway serves it at
 `/api/spec.yml`, with the Swagger UI at `/api/`). The full contract, with every code and when it comes, is
@@ -263,6 +263,78 @@ else:
 
 The gateway decodes the photo, applies its EXIF orientation and re-encodes it as a JPEG within OK's limits (1680×1680
 px at quality 0.8 by default). A side under 64 px is `invalid_media`. Photos only.
+
+## Albums
+Photo albums of the account's OK user and of its groups, and their photos with descriptions. These calls work on
+ok.ru's desktop web with the login's cookies: they need a running session, not a connected messenger socket.
+
+```python
+from okapi_python.api.albums import (
+    create_album,
+    create_group_album,
+    list_album_photos,
+    list_groups,
+    update_album_photo,
+    update_group_album,
+    upload_album_photo,
+    upload_group_album_photo,
+)
+from okapi_python.models import (
+    AlbumVisibility,
+    CreateAlbumRequest,
+    CreateGroupAlbumRequest,
+    ErrorResponse,
+    UpdateAlbumPhotoRequest,
+    UpdateGroupAlbumRequest,
+    UploadAlbumPhotoForm,
+    UploadAlbumPhotoRequest,
+)
+from okapi_python.types import UNSET, File
+
+# A user's album, seen by friends only; "personal" is the user's "Личные фотографии"
+album = create_album.sync(
+    client=account, body=CreateAlbumRequest(title="Весна 2026", visibility=[AlbumVisibility.FRIENDS])
+).album
+
+with open("dress.jpg", "rb") as f:
+    up = upload_album_photo.sync(
+        album.album_id,
+        client=slow,
+        body=UploadAlbumPhotoForm(file=File(payload=f, file_name="dress.jpg"), description="Платье, размер 44"),
+    )
+if isinstance(up, ErrorResponse) and up.code == "description_failed":
+    # the photo is up, its text is not: set it again, do not upload again
+    update_album_photo.sync(
+        album.album_id, up.photo_id, client=account, body=UpdateAlbumPhotoRequest(description="Платье, размер 44")
+    )
+
+# Albums of a group: only where the OK user is a moderator
+groups = list_groups.sync(client=account).groups
+group = next(g for g in groups if g.moderator)
+goods = create_group_album.sync(group.group_id, client=account, body=CreateGroupAlbumRequest(title="Товары")).album
+upload_group_album_photo.sync(
+    group.group_id,
+    goods.album_id,
+    client=slow,
+    body=UploadAlbumPhotoRequest(url="https://example.com/coat.jpg", description="Куртка, 46"),
+)
+update_group_album.sync(group.group_id, goods.album_id, client=account, body=UpdateGroupAlbumRequest(pinned=True))
+
+# Photos, newest first
+cursor = UNSET
+while True:
+    page = list_album_photos.sync(album.album_id, client=account, cursor=cursor)
+    for photo in page.photos:
+        print(photo.photo_id, photo.description)
+    if not page.next_cursor:
+        break
+    cursor = page.next_cursor
+```
+
+OK's album lists carry no settings: an album read by its id shows `visibility` (a user's) or `pinned` and
+`admins_only` (a group's); in a list they are `UNSET`. A change keeps the settings it does not name. There is no `ref`
+for uploads: after `timeout`, list the album to see whether the photo came. OK's own limit on new photos is
+`photo_limit` (429).
 
 ## Messages and chats
 

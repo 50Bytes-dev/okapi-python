@@ -4,6 +4,10 @@ from .account import Account
 from .account_list_response import AccountListResponse
 from .account_response import AccountResponse
 from .account_token_response import AccountTokenResponse
+from .album import Album
+from .album_list_response import AlbumListResponse
+from .album_response import AlbumResponse
+from .album_visibility import AlbumVisibility
 from .chat import Chat
 from .chat_list_response import ChatListResponse
 from .chat_response import ChatResponse
@@ -15,6 +19,8 @@ from .connected_event import ConnectedEvent
 from .connected_event_data import ConnectedEventData
 from .create_account_request import CreateAccountRequest
 from .create_account_response import CreateAccountResponse
+from .create_album_request import CreateAlbumRequest
+from .create_group_album_request import CreateGroupAlbumRequest
 from .delete_message_result import DeleteMessageResult
 from .delete_message_result_status import DeleteMessageResultStatus
 from .delete_messages_request import DeleteMessagesRequest
@@ -26,6 +32,8 @@ from .error_response import ErrorResponse
 from .event_chat import EventChat
 from .event_envelope import EventEnvelope
 from .event_type import EventType
+from .group import Group
+from .group_list_response import GroupListResponse
 from .health_response import HealthResponse
 from .health_response_status import HealthResponseStatus
 from .history_response import HistoryResponse
@@ -62,6 +70,9 @@ from .pause import Pause
 from .pause_reason import PauseReason
 from .paused_event import PausedEvent
 from .paused_event_data import PausedEventData
+from .photo import Photo
+from .photo_list_response import PhotoListResponse
+from .photo_response import PhotoResponse
 from .resumed_event import ResumedEvent
 from .resumed_event_data import ResumedEventData
 from .send_message_request import SendMessageRequest
@@ -73,6 +84,11 @@ from .success_response import SuccessResponse
 from .typing_event import TypingEvent
 from .typing_event_data import TypingEventData
 from .update_account_request import UpdateAccountRequest
+from .update_album_photo_request import UpdateAlbumPhotoRequest
+from .update_album_request import UpdateAlbumRequest
+from .update_group_album_request import UpdateGroupAlbumRequest
+from .upload_album_photo_form import UploadAlbumPhotoForm
+from .upload_album_photo_request import UploadAlbumPhotoRequest
 from .upload_media_form import UploadMediaForm
 from .upload_media_request import UploadMediaRequest
 from .upload_media_response import UploadMediaResponse
@@ -87,6 +103,10 @@ __all__ = (
     "AccountListResponse",
     "AccountResponse",
     "AccountTokenResponse",
+    "Album",
+    "AlbumListResponse",
+    "AlbumResponse",
+    "AlbumVisibility",
     "Chat",
     "ChatListResponse",
     "ChatResponse",
@@ -98,6 +118,8 @@ __all__ = (
     "ConnectResponse",
     "CreateAccountRequest",
     "CreateAccountResponse",
+    "CreateAlbumRequest",
+    "CreateGroupAlbumRequest",
     "DeleteMessageResult",
     "DeleteMessageResultStatus",
     "DeleteMessagesRequest",
@@ -109,6 +131,8 @@ __all__ = (
     "EventChat",
     "EventEnvelope",
     "EventType",
+    "Group",
+    "GroupListResponse",
     "HealthResponse",
     "HealthResponseStatus",
     "HistoryResponse",
@@ -145,6 +169,9 @@ __all__ = (
     "PausedEvent",
     "PausedEventData",
     "PauseReason",
+    "Photo",
+    "PhotoListResponse",
+    "PhotoResponse",
     "ResumedEvent",
     "ResumedEventData",
     "SendMessageRequest",
@@ -156,6 +183,11 @@ __all__ = (
     "TypingEvent",
     "TypingEventData",
     "UpdateAccountRequest",
+    "UpdateAlbumPhotoRequest",
+    "UpdateAlbumRequest",
+    "UpdateGroupAlbumRequest",
+    "UploadAlbumPhotoForm",
+    "UploadAlbumPhotoRequest",
     "UploadMediaForm",
     "UploadMediaRequest",
     "UploadMediaResponse",

@@ -17,7 +17,7 @@ class HealthResponse:
     Attributes:
         success (bool): false when the database does not answer Example: True.
         status (HealthResponseStatus): `degraded` when the database does not answer
-        version (str):  Example: 0.1.1.
+        version (str):  Example: 0.2.0.
         uptime_seconds (int):  Example: 12345.
         db (bool): Whether the database answers a ping Example: True.
         accounts (int): Accounts of the gateway Example: 4.
