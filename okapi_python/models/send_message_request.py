@@ -19,7 +19,7 @@ class SendMessageRequest:
         chat_id (int | Unset):  Example: -123456789012345.
         user_id (int | Unset): Sends to the dialog with this OK user
         text (str | Unset):  Example: Hello!.
-        attachments (list[str] | Unset): Handles from `POST /media` Example: ['okph1.eyJwIjoi…'].
+        attachments (list[str] | Unset): Handles from `POST /media` Example: ['okph2.eyJwIjoi…'].
         reply_to (str | Unset): The message id this one answers
         silent (bool | Unset): Send without a notification Default: False.
         ref (str | Unset): The idempotency key (at most 128 bytes); see "Sends" above Example: order-1042-confirm.

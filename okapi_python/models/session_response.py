@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from ..models.login import Login
     from ..models.ok_user import OkUser
     from ..models.pause import Pause
+    from ..models.uploads import Uploads
 
 
 T = TypeVar("T", bound="SessionResponse")
@@ -29,8 +30,15 @@ class SessionResponse:
             and confirm in the OK app), `done` (`okUser`; `Connected` follows),
             `failed` (`failure`).
         pause (Pause | Unset): The pause of the OK user. `reason`: `spam` (OK's antispam or flood
-            refusal), `restricted` (OK restricted sending). Lifted only by
+            refusal), `restricted` (OK restricted sending), `captcha` (ok.ru sent a
+            request to its captcha: pass it in a browser of the user, then
+            resume; `upstreamCode` is empty). Lifted only by
             `POST /session/resume`.
+        uploads (Uploads | Unset): The photos the gateway uploaded for the OK user lately, by every
+            account of the user (OK's limits are the user's: 1000 new photos in
+            5 minutes, 10000 a day). An upload that ended without an answer
+            (`504 timeout`) counts too: OK may have taken it. Uploads from the
+            user's other devices are not seen. Present while a login is stored.
     """
 
     success: bool
@@ -39,6 +47,7 @@ class SessionResponse:
     ok_user: OkUser | Unset = UNSET
     login: Login | Unset = UNSET
     pause: Pause | Unset = UNSET
+    uploads: Uploads | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,6 +69,10 @@ class SessionResponse:
         if not isinstance(self.pause, Unset):
             pause = self.pause.to_dict()
 
+        uploads: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.uploads, Unset):
+            uploads = self.uploads.to_dict()
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -75,6 +88,8 @@ class SessionResponse:
             field_dict["login"] = login
         if pause is not UNSET:
             field_dict["pause"] = pause
+        if uploads is not UNSET:
+            field_dict["uploads"] = uploads
 
         return field_dict
 
@@ -83,6 +98,7 @@ class SessionResponse:
         from ..models.login import Login
         from ..models.ok_user import OkUser
         from ..models.pause import Pause
+        from ..models.uploads import Uploads
 
         d = dict(src_dict)
         success = d.pop("success")
@@ -112,6 +128,13 @@ class SessionResponse:
         else:
             pause = Pause.from_dict(_pause)
 
+        _uploads = d.pop("uploads", UNSET)
+        uploads: Uploads | Unset
+        if isinstance(_uploads, Unset):
+            uploads = UNSET
+        else:
+            uploads = Uploads.from_dict(_uploads)
+
         session_response = cls(
             success=success,
             logged_in=logged_in,
@@ -119,6 +142,7 @@ class SessionResponse:
             ok_user=ok_user,
             login=login,
             pause=pause,
+            uploads=uploads,
         )
 
         session_response.additional_properties = d

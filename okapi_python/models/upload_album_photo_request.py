@@ -19,11 +19,14 @@ class UploadAlbumPhotoRequest:
         url (str | Unset): An http(s) URL the gateway fetches Example: https://example.com/photo.jpg.
         data (str | Unset): The photo as base64 or a base64 data URL
         description (str | Unset): The photo's text, at most 4096 UTF-16 units Example: Dress, size 44.
+        ref (str | Unset): Your idempotency key, at most 128 bytes; a repeat never uploads a second photo Example:
+            order-1042/photo-1.
     """
 
     url: str | Unset = UNSET
     data: str | Unset = UNSET
     description: str | Unset = UNSET
+    ref: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,6 +35,8 @@ class UploadAlbumPhotoRequest:
         data = self.data
 
         description = self.description
+
+        ref = self.ref
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -42,6 +47,8 @@ class UploadAlbumPhotoRequest:
             field_dict["data"] = data
         if description is not UNSET:
             field_dict["description"] = description
+        if ref is not UNSET:
+            field_dict["ref"] = ref
 
         return field_dict
 
@@ -54,10 +61,13 @@ class UploadAlbumPhotoRequest:
 
         description = d.pop("description", UNSET)
 
+        ref = d.pop("ref", UNSET)
+
         upload_album_photo_request = cls(
             url=url,
             data=data,
             description=description,
+            ref=ref,
         )
 
         upload_album_photo_request.additional_properties = d

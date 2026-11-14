@@ -115,8 +115,11 @@ def sync_detailed(
 ) -> Response[ErrorResponse | GroupListResponse]:
     r"""The OK user's groups
 
-     The OK groups of the account's OK user. `moderator` marks those it owns, administers or moderates
-    (\"Модерирую\" on OK): only there may it create, edit and delete albums.
+     All of the OK groups of the account's OK user, read across all of OK's pages, with the user's `role`
+    in each (`moderator` where it owns, administers or moderates the group, \"Модерирую\" on OK: only
+    there may it create, edit and delete albums) and the group's picture. OK's page size of the groups
+    list and its loader were not seen live (the test account has two groups): the gateway follows the
+    loader as it does on the albums page.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,8 +144,11 @@ def sync(
 ) -> ErrorResponse | GroupListResponse | None:
     r"""The OK user's groups
 
-     The OK groups of the account's OK user. `moderator` marks those it owns, administers or moderates
-    (\"Модерирую\" on OK): only there may it create, edit and delete albums.
+     All of the OK groups of the account's OK user, read across all of OK's pages, with the user's `role`
+    in each (`moderator` where it owns, administers or moderates the group, \"Модерирую\" on OK: only
+    there may it create, edit and delete albums) and the group's picture. OK's page size of the groups
+    list and its loader were not seen live (the test account has two groups): the gateway follows the
+    loader as it does on the albums page.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -163,8 +169,11 @@ async def asyncio_detailed(
 ) -> Response[ErrorResponse | GroupListResponse]:
     r"""The OK user's groups
 
-     The OK groups of the account's OK user. `moderator` marks those it owns, administers or moderates
-    (\"Модерирую\" on OK): only there may it create, edit and delete albums.
+     All of the OK groups of the account's OK user, read across all of OK's pages, with the user's `role`
+    in each (`moderator` where it owns, administers or moderates the group, \"Модерирую\" on OK: only
+    there may it create, edit and delete albums) and the group's picture. OK's page size of the groups
+    list and its loader were not seen live (the test account has two groups): the gateway follows the
+    loader as it does on the albums page.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -187,8 +196,11 @@ async def asyncio(
 ) -> ErrorResponse | GroupListResponse | None:
     r"""The OK user's groups
 
-     The OK groups of the account's OK user. `moderator` marks those it owns, administers or moderates
-    (\"Модерирую\" on OK): only there may it create, edit and delete albums.
+     All of the OK groups of the account's OK user, read across all of OK's pages, with the user's `role`
+    in each (`moderator` where it owns, administers or moderates the group, \"Модерирую\" on OK: only
+    there may it create, edit and delete albums) and the group's picture. OK's page size of the groups
+    list and its loader were not seen live (the test account has two groups): the gateway follows the
+    loader as it does on the albums page.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

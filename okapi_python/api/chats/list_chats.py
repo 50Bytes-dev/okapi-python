@@ -17,6 +17,7 @@ def _get_kwargs(
     q: str | Unset = UNSET,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    ids: list[int] | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -35,6 +36,12 @@ def _get_kwargs(
     params["limit"] = limit
 
     params["cursor"] = cursor
+
+    json_ids: list[int] | Unset = UNSET
+    if not isinstance(ids, Unset):
+        json_ids = ids
+
+    params["ids"] = json_ids
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -143,6 +150,7 @@ def sync_detailed(
     q: str | Unset = UNSET,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    ids: list[int] | Unset = UNSET,
 ) -> Response[ChatListResponse | ErrorResponse]:
     """List or search the chats
 
@@ -155,11 +163,17 @@ def sync_detailed(
     even none, and still have a `nextCursor`. A dialog OK gives no title
     is titled with the other person's name.
 
+    With `ids`, the chats of those ids instead, in one call to OK, in the
+    order asked, and `missing` with the ids OK did not show. `type`, `q`
+    and `cursor` do not go with it; a `limit` is checked and does not
+    bound the ids.
+
     Args:
         type_ (list[ChatType] | Unset):
         q (str | Unset):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        ids (list[int] | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -174,6 +188,7 @@ def sync_detailed(
         q=q,
         limit=limit,
         cursor=cursor,
+        ids=ids,
     )
 
     response = client.get_httpx_client().request(
@@ -190,6 +205,7 @@ def sync(
     q: str | Unset = UNSET,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    ids: list[int] | Unset = UNSET,
 ) -> ChatListResponse | ErrorResponse | None:
     """List or search the chats
 
@@ -202,11 +218,17 @@ def sync(
     even none, and still have a `nextCursor`. A dialog OK gives no title
     is titled with the other person's name.
 
+    With `ids`, the chats of those ids instead, in one call to OK, in the
+    order asked, and `missing` with the ids OK did not show. `type`, `q`
+    and `cursor` do not go with it; a `limit` is checked and does not
+    bound the ids.
+
     Args:
         type_ (list[ChatType] | Unset):
         q (str | Unset):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        ids (list[int] | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -222,6 +244,7 @@ def sync(
         q=q,
         limit=limit,
         cursor=cursor,
+        ids=ids,
     ).parsed
 
 
@@ -232,6 +255,7 @@ async def asyncio_detailed(
     q: str | Unset = UNSET,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    ids: list[int] | Unset = UNSET,
 ) -> Response[ChatListResponse | ErrorResponse]:
     """List or search the chats
 
@@ -244,11 +268,17 @@ async def asyncio_detailed(
     even none, and still have a `nextCursor`. A dialog OK gives no title
     is titled with the other person's name.
 
+    With `ids`, the chats of those ids instead, in one call to OK, in the
+    order asked, and `missing` with the ids OK did not show. `type`, `q`
+    and `cursor` do not go with it; a `limit` is checked and does not
+    bound the ids.
+
     Args:
         type_ (list[ChatType] | Unset):
         q (str | Unset):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        ids (list[int] | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -263,6 +293,7 @@ async def asyncio_detailed(
         q=q,
         limit=limit,
         cursor=cursor,
+        ids=ids,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -277,6 +308,7 @@ async def asyncio(
     q: str | Unset = UNSET,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    ids: list[int] | Unset = UNSET,
 ) -> ChatListResponse | ErrorResponse | None:
     """List or search the chats
 
@@ -289,11 +321,17 @@ async def asyncio(
     even none, and still have a `nextCursor`. A dialog OK gives no title
     is titled with the other person's name.
 
+    With `ids`, the chats of those ids instead, in one call to OK, in the
+    order asked, and `missing` with the ids OK did not show. `type`, `q`
+    and `cursor` do not go with it; a `limit` is checked and does not
+    bound the ids.
+
     Args:
         type_ (list[ChatType] | Unset):
         q (str | Unset):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        ids (list[int] | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -310,5 +348,6 @@ async def asyncio(
             q=q,
             limit=limit,
             cursor=cursor,
+            ids=ids,
         )
     ).parsed

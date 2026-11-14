@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+if TYPE_CHECKING:
+    from ..models.group_info import GroupInfo
+
+
+T = TypeVar("T", bound="GroupResponse")
+
+
+@_attrs_define
+class GroupResponse:
+    """
+    Attributes:
+        success (bool):
+        group (GroupInfo): A group as its own page shows it: any group the account may see.
+            `role` is there when the group is the user's.
+    """
+
+    success: bool
+    group: GroupInfo
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        success = self.success
+
+        group = self.group.to_dict()
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "success": success,
+                "group": group,
+            }
+        )
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.group_info import GroupInfo
+
+        d = dict(src_dict)
+        success = d.pop("success")
+
+        group = GroupInfo.from_dict(d.pop("group"))
+
+        group_response = cls(
+            success=success,
+            group=group,
+        )
+
+        group_response.additional_properties = d
+        return group_response
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

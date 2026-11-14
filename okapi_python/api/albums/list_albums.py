@@ -7,14 +7,27 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.album_list_response import AlbumListResponse
 from ...models.error_response import ErrorResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
-def _get_kwargs() -> dict[str, Any]:
+def _get_kwargs(
+    *,
+    limit: int | Unset = 50,
+    cursor: str | Unset = UNSET,
+) -> dict[str, Any]:
+
+    params: dict[str, Any] = {}
+
+    params["limit"] = limit
+
+    params["cursor"] = cursor
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/albums",
+        "params": params,
     }
 
     return _kwargs
@@ -112,12 +125,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 50,
+    cursor: str | Unset = UNSET,
 ) -> Response[AlbumListResponse | ErrorResponse]:
     r"""The OK user's albums
 
-     The albums of the account's OK user, `personal` (\"Личные фотографии\", the album every user has)
-    first, then the rest newest first, read across all of OK's pages (20 a page). OK's list carries no
-    settings.
+     The albums of the account's OK user, one page at a time: `personal` (\"Личные фотографии\", the
+    album every user has) first, then the rest newest first. `nextCursor` gives the next page; only its
+    absence means the end. One request reads at most 10 of OK's pages (OK gives 20 albums a page). OK's
+    list carries no settings.
+
+    Args:
+        limit (int | Unset):  Default: 50.
+        cursor (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -127,7 +147,10 @@ def sync_detailed(
         Response[AlbumListResponse | ErrorResponse]
     """
 
-    kwargs = _get_kwargs()
+    kwargs = _get_kwargs(
+        limit=limit,
+        cursor=cursor,
+    )
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -139,12 +162,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 50,
+    cursor: str | Unset = UNSET,
 ) -> AlbumListResponse | ErrorResponse | None:
     r"""The OK user's albums
 
-     The albums of the account's OK user, `personal` (\"Личные фотографии\", the album every user has)
-    first, then the rest newest first, read across all of OK's pages (20 a page). OK's list carries no
-    settings.
+     The albums of the account's OK user, one page at a time: `personal` (\"Личные фотографии\", the
+    album every user has) first, then the rest newest first. `nextCursor` gives the next page; only its
+    absence means the end. One request reads at most 10 of OK's pages (OK gives 20 albums a page). OK's
+    list carries no settings.
+
+    Args:
+        limit (int | Unset):  Default: 50.
+        cursor (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -156,18 +186,27 @@ def sync(
 
     return sync_detailed(
         client=client,
+        limit=limit,
+        cursor=cursor,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 50,
+    cursor: str | Unset = UNSET,
 ) -> Response[AlbumListResponse | ErrorResponse]:
     r"""The OK user's albums
 
-     The albums of the account's OK user, `personal` (\"Личные фотографии\", the album every user has)
-    first, then the rest newest first, read across all of OK's pages (20 a page). OK's list carries no
-    settings.
+     The albums of the account's OK user, one page at a time: `personal` (\"Личные фотографии\", the
+    album every user has) first, then the rest newest first. `nextCursor` gives the next page; only its
+    absence means the end. One request reads at most 10 of OK's pages (OK gives 20 albums a page). OK's
+    list carries no settings.
+
+    Args:
+        limit (int | Unset):  Default: 50.
+        cursor (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -177,7 +216,10 @@ async def asyncio_detailed(
         Response[AlbumListResponse | ErrorResponse]
     """
 
-    kwargs = _get_kwargs()
+    kwargs = _get_kwargs(
+        limit=limit,
+        cursor=cursor,
+    )
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -187,12 +229,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 50,
+    cursor: str | Unset = UNSET,
 ) -> AlbumListResponse | ErrorResponse | None:
     r"""The OK user's albums
 
-     The albums of the account's OK user, `personal` (\"Личные фотографии\", the album every user has)
-    first, then the rest newest first, read across all of OK's pages (20 a page). OK's list carries no
-    settings.
+     The albums of the account's OK user, one page at a time: `personal` (\"Личные фотографии\", the
+    album every user has) first, then the rest newest first. `nextCursor` gives the next page; only its
+    absence means the end. One request reads at most 10 of OK's pages (OK gives 20 albums a page). OK's
+    list carries no settings.
+
+    Args:
+        limit (int | Unset):  Default: 50.
+        cursor (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -205,5 +254,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
+            limit=limit,
+            cursor=cursor,
         )
     ).parsed

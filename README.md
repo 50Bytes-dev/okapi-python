@@ -3,8 +3,8 @@ A client library for accessing OKAPI (https://github.com/50Bytes-dev/okapi), the
 personal OK.ru (Odnoklassniki) accounts and works from them through OK's web messenger: login by OK's own QR code,
 scanned in the OK app; sending text and photos to people and chats with idempotency by `ref`; editing and deleting
 messages; history, read marks, typing; chats, their members, users; photo albums of the account and of the groups it
-moderates, with photos and their descriptions; and incoming events as signed webhooks. One gateway serves many
-accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.2.0).
+belongs to, with photos and their descriptions; and incoming events as signed webhooks. One gateway serves many
+accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.3.1).
 
 The package is generated from the gateway's OpenAPI schema (`static/api/spec.yml` in okapi; the gateway serves it at
 `/api/spec.yml`, with the Swagger UI at `/api/`). The full contract, with every code and when it comes, is
@@ -50,6 +50,10 @@ answers `504 timeout` past it. Its own budgets:
 | `get_chat`, `list_members`, `get_history`, `get_message`, `get_user`, `get_users`, `mark_read` | one or two calls to OK of up to 10 s each |
 | `connect` | waits up to 10 s for the connection, then answers `connected: false` and goes on connecting; up to 5 s more when OK no longer accepts the login |
 | `upload_media` | a `url` is fetched within 10 s; the upload to OK takes up to 120 s |
+| `upload_album_photo`, `upload_group_album_photo` | a `url` within 10 s, the upload up to 120 s, the description up to 10 s |
+| `list_albums`, `list_group_albums` | up to 10 of OK's pages, 10 s each |
+| `list_groups` | 10 s for every page of OK's two group lists |
+| `delete_album_photos`, `delete_group_album_photos` | up to 120 s; the photos past it are `skipped` |
 | `start_qr_login` | waits for ok.ru to give a QR, bounded only by `OKAPI_LOGIN_TIMEOUT` (10 min by default) |
 
 The gateway's HTTP server reads a request within 120 s and writes its answer within 300 s.
@@ -62,7 +66,16 @@ slow = AuthenticatedClient(base_url="http://localhost:5560", token="<account tok
 ```
 
 A client that gives up before the gateway answers knows as little as a `504 timeout`: the call may have taken effect.
-For a send, repeat it with the same `ref` (see [Send](#send-a-message)).
+For a send, repeat it with the same `ref` (see [Send](#send-a-message)); for an album upload, too (see
+[Albums](#albums)).
+
+The gateway takes a bound of its own per request: `X-Okapi-Timeout: <seconds>` (0.1 to 300). Every call to OK the
+request makes ends by then and the answer comes within it, with the usual codes (`504 timeout` when a call to OK got
+no answer in time, `503 not_connected` when nothing was sent). Give it as a header of a client:
+
+```python
+quick = account.with_headers({"X-Okapi-Timeout": "5"})  # keep httpx's own timeout above it
+```
 
 ## Calls
 Every operation is a module under `okapi_python.api.<tag>` with four functions: `sync`, `sync_detailed`, `asyncio`
@@ -103,6 +116,28 @@ returns a `Response` with `status_code` and `parsed`.
 | `api.chats.send_typing` | `POST /chats/{chatId}/typing` |
 | `api.users.get_users` | `GET /users` |
 | `api.users.get_user` | `GET /users/{userId}` |
+| `api.albums.list_groups` | `GET /groups` |
+| `api.albums.get_group` | `GET /groups/{groupId}` |
+| `api.albums.list_albums` | `GET /albums` |
+| `api.albums.create_album` | `POST /albums` |
+| `api.albums.get_album` | `GET /albums/{albumId}` |
+| `api.albums.update_album` | `PATCH /albums/{albumId}` |
+| `api.albums.delete_album` | `DELETE /albums/{albumId}` |
+| `api.albums.list_album_photos` | `GET /albums/{albumId}/photos` |
+| `api.albums.upload_album_photo` | `POST /albums/{albumId}/photos` |
+| `api.albums.delete_album_photos` | `POST /albums/{albumId}/photos/delete` |
+| `api.albums.update_album_photo` | `PATCH /albums/{albumId}/photos/{photoId}` |
+| `api.albums.delete_album_photo` | `DELETE /albums/{albumId}/photos/{photoId}` |
+| `api.albums.list_group_albums` | `GET /groups/{groupId}/albums` |
+| `api.albums.create_group_album` | `POST /groups/{groupId}/albums` |
+| `api.albums.get_group_album` | `GET /groups/{groupId}/albums/{albumId}` |
+| `api.albums.update_group_album` | `PATCH /groups/{groupId}/albums/{albumId}` |
+| `api.albums.delete_group_album` | `DELETE /groups/{groupId}/albums/{albumId}` |
+| `api.albums.list_group_album_photos` | `GET /groups/{groupId}/albums/{albumId}/photos` |
+| `api.albums.upload_group_album_photo` | `POST /groups/{groupId}/albums/{albumId}/photos` |
+| `api.albums.delete_group_album_photos` | `POST /groups/{groupId}/albums/{albumId}/photos/delete` |
+| `api.albums.update_group_album_photo` | `PATCH /groups/{groupId}/albums/{albumId}/photos/{photoId}` |
+| `api.albums.delete_group_album_photo` | `DELETE /groups/{groupId}/albums/{albumId}/photos/{photoId}` |
 
 Fields the gateway leaves out are `UNSET` (`from okapi_python.types import UNSET`), which is falsy. `chat_id` and
 user ids are `int`; a message id is a `str` of digits (OK's ids have 18 digits). A dialog's chat id is positive, a
@@ -254,12 +289,16 @@ up = upload_media.sync(client=slow, body=UploadMediaRequest(url="https://example
 if isinstance(up, ErrorResponse):
     ...  # invalid_input, invalid_media, body_too_large, fetch_failed, upload_failed, paused, not_connected, timeout
 else:
-    print(up.attachment, up.width, up.height, up.size)
+    print(up.attachment, up.expires_at, up.width, up.height, up.size)
     send_message.sync(
         client=account,
         body=SendMessageRequest(chat_id=-123456789012345, text="Платье, 1200 ₽", attachments=[up.attachment]),
     )
 ```
+
+A handle is good until `expires_at` (Unix seconds; `OKAPI_MEDIA_HANDLE_TTL` of the gateway, 24 h by default): a later
+send is refused before OK as `attachment_rejected`, with its index in `rejected_attachments`. OK's own refusal of a
+photo is `attachment_rejected` too.
 
 The gateway decodes the photo, applies its EXIF orientation and re-encodes it as a JPEG within OK's limits (1680×1680
 px at quality 0.8 by default). A side under 64 px is `invalid_media`. Photos only.
@@ -272,7 +311,10 @@ ok.ru's desktop web with the login's cookies: they need a running session, not a
 from okapi_python.api.albums import (
     create_album,
     create_group_album,
+    delete_album_photos,
+    get_group,
     list_album_photos,
+    list_albums,
     list_groups,
     update_album_photo,
     update_group_album,
@@ -283,7 +325,9 @@ from okapi_python.models import (
     AlbumVisibility,
     CreateAlbumRequest,
     CreateGroupAlbumRequest,
+    DeleteAlbumPhotosRequest,
     ErrorResponse,
+    GroupRole,
     UpdateAlbumPhotoRequest,
     UpdateGroupAlbumRequest,
     UploadAlbumPhotoForm,
@@ -300,17 +344,22 @@ with open("dress.jpg", "rb") as f:
     up = upload_album_photo.sync(
         album.album_id,
         client=slow,
-        body=UploadAlbumPhotoForm(file=File(payload=f, file_name="dress.jpg"), description="Платье, размер 44"),
+        body=UploadAlbumPhotoForm(
+            file=File(payload=f, file_name="dress.jpg"), description="Платье, размер 44", ref="dress-44-photo-1"
+        ),
     )
-if isinstance(up, ErrorResponse) and up.code == "description_failed":
+if isinstance(up, ErrorResponse) and up.code == "timeout":
+    ...  # upload again with the same ref: the gateway finds the photo if it came (duplicate=True)
+elif isinstance(up, ErrorResponse) and up.code == "description_failed":
     # the photo is up, its text is not: set it again, do not upload again
     update_album_photo.sync(
         album.album_id, up.photo_id, client=account, body=UpdateAlbumPhotoRequest(description="Платье, размер 44")
     )
 
-# Albums of a group: only where the OK user is a moderator
+# Every group of the user, with its picture and the user's role; albums of a group are made by its moderators
 groups = list_groups.sync(client=account).groups
-group = next(g for g in groups if g.moderator)
+group = next(g for g in groups if g.role == GroupRole.MODERATOR)
+print(get_group.sync(group.group_id, client=account).group.status)  # active, blocked, deleted
 goods = create_group_album.sync(group.group_id, client=account, body=CreateGroupAlbumRequest(title="Товары")).album
 upload_group_album_photo.sync(
     group.group_id,
@@ -319,6 +368,22 @@ upload_group_album_photo.sync(
     body=UploadAlbumPhotoRequest(url="https://example.com/coat.jpg", description="Куртка, 46"),
 )
 update_group_album.sync(group.group_id, goods.album_id, client=account, body=UpdateGroupAlbumRequest(pinned=True))
+
+# Albums a page at a time ("personal" first); can_upload tells whether the account may upload into one
+cursor = UNSET
+while True:
+    page = list_albums.sync(client=account, cursor=cursor, limit=50)
+    print([(a.title, a.can_upload) for a in page.albums])
+    if not page.next_cursor:
+        break
+    cursor = page.next_cursor
+
+# Delete photos in one request, each answered: deleted, not_found, forbidden, failed, skipped
+res = delete_album_photos.sync(
+    album.album_id, client=account, body=DeleteAlbumPhotosRequest(photo_ids=["1011458234641"])
+)
+for r in res.results:
+    print(r.photo_id, r.status, r.code)
 
 # Photos, newest first
 cursor = UNSET
@@ -332,9 +397,16 @@ while True:
 ```
 
 OK's album lists carry no settings: an album read by its id shows `visibility` (a user's) or `pinned` and
-`admins_only` (a group's); in a list they are `UNSET`. A change keeps the settings it does not name. There is no `ref`
-for uploads: after `timeout`, list the album to see whether the photo came. OK's own limit on new photos is
-`photo_limit` (429).
+`admins_only` (a group's); in a list they are `UNSET`. A change keeps the settings it does not name.
+
+The `ref` of an upload (at most 128 bytes) is your idempotency key: a repeat answers the photo it uploaded,
+`duplicate=True`, without uploading again (even when the photo was deleted since). After `timeout` the gateway looks
+for the photo in the album by the id OK gave it before the image was sent, and uploads anew only when it is not there.
+The same ref with another album is `400 invalid_input`; a ref is remembered for 7 days. Without a ref, list the album
+after `timeout` to see whether the photo came.
+
+OK's own limit on new photos is `photo_limit` (429): 1000 in 5 minutes, 10000 a day. The gateway keeps no pace;
+`get_session` counts the uploads (`uploads.album_photos`, `uploads.media`: last 5 minutes, hour, day).
 
 ## Messages and chats
 
@@ -349,10 +421,15 @@ cursor = UNSET
 while True:
     page = list_chats.sync(client=account, cursor=cursor, limit=50)
     for chat in page.chats:
-        print(chat.chat_id, chat.type_, chat.title)
+        # status: active, left, removed, closed, blocked; cant_write_reason: inactive, restricted, not_member, not_admin
+        print(chat.chat_id, chat.type_, chat.title, chat.status, chat.can_write, chat.cant_write_reason)
     if not page.next_cursor:
         break
     cursor = page.next_cursor
+
+# Several chats by their ids (up to 100); the ones OK does not show are in missing
+some = list_chats.sync(client=account, ids=[-123456789012345, 571234567890])
+print([c.chat_id for c in some.chats], some.missing)
 
 # Group chats whose title matches (a page may hold fewer than limit chats, even none, and still go on)
 found = list_chats.sync(client=slow, type_=[ChatType.CHAT], q="Test Group")

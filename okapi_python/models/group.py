@@ -6,6 +6,9 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.group_role import GroupRole
+from ..types import UNSET, Unset
+
 T = TypeVar("T", bound="Group")
 
 
@@ -16,13 +19,18 @@ class Group:
     Attributes:
         group_id (int):  Example: 70000060985873.
         name (str):  Example: Interest group.
-        moderator (bool): The OK user owns, administers or moderates the group, so it may create, edit and delete its
-            albums
+        role (GroupRole): The OK user's role in the group: `moderator` (it owns, administers
+            or moderates it, "Модерирую" on OK: it may create, edit and delete
+            the group's albums and upload into any), `member` (it uploads where an
+            album's `canUpload` says so). OK does not tell an owner from an admin
+            or a moderator here.
+        photo_url (str | Unset): The group's picture, when its card shows one
     """
 
     group_id: int
     name: str
-    moderator: bool
+    role: GroupRole
+    photo_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,7 +38,9 @@ class Group:
 
         name = self.name
 
-        moderator = self.moderator
+        role = self.role.value
+
+        photo_url = self.photo_url
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -38,9 +48,11 @@ class Group:
             {
                 "groupId": group_id,
                 "name": name,
-                "moderator": moderator,
+                "role": role,
             }
         )
+        if photo_url is not UNSET:
+            field_dict["photoUrl"] = photo_url
 
         return field_dict
 
@@ -51,12 +63,15 @@ class Group:
 
         name = d.pop("name")
 
-        moderator = d.pop("moderator")
+        role = GroupRole(d.pop("role"))
+
+        photo_url = d.pop("photoUrl", UNSET)
 
         group = cls(
             group_id=group_id,
             name=name,
-            moderator=moderator,
+            role=role,
+            photo_url=photo_url,
         )
 
         group.additional_properties = d

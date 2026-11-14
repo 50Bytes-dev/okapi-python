@@ -5,34 +5,53 @@ import pytest
 
 from okapi_python import AuthenticatedClient, Client
 from okapi_python.api.admin import create_account
-from okapi_python.api.albums import list_group_albums, update_group_album, upload_group_album_photo
+from okapi_python.api.albums import (
+    delete_group_album_photos,
+    get_group,
+    list_albums,
+    list_group_albums,
+    list_groups,
+    update_group_album,
+    upload_group_album_photo,
+)
 from okapi_python.api.chats import list_chats
 from okapi_python.api.health import get_health
 from okapi_python.api.login import start_qr_login
 from okapi_python.api.media import upload_media
 from okapi_python.api.messages import send_message
-from okapi_python.api.session import connect
+from okapi_python.api.session import connect, get_session
 from okapi_python.models import (
     Album,
     AlbumListResponse,
     AlbumResponse,
+    ChatCantWriteReason,
+    ChatListResponse,
+    ChatStatus,
     ChatType,
     CreateAccountRequest,
     CreateAccountResponse,
+    DeleteAlbumPhotosRequest,
+    DeleteAlbumPhotosResponse,
+    DeletePhotoResultStatus,
     ErrorResponse,
     EventType,
+    GroupInfoStatus,
+    GroupListResponse,
+    GroupResponse,
+    GroupRole,
     HealthResponse,
     LoginResponse,
     LoginStep,
     PauseReason,
-    PhotoResponse,
     SendMessageRequest,
     SendMessageResponse,
+    SessionResponse,
     UpdateGroupAlbumRequest,
     UploadAlbumPhotoForm,
     UploadMediaForm,
     UploadMediaRequest,
     UploadMediaResponse,
+    UploadPhotoResponse,
 )
 from okapi_python.types import UNSET, File
 
@@ -205,14 +224,25 @@ def test_health_takes_no_token_and_parses_the_degraded_answer():
 
 
 def test_a_multipart_upload_lets_httpx_set_its_boundary():
-    rec = Recorder(200, {"success": True, "attachment": "okph1.eyJwIjoi", "width": 1280, "height": 960, "size": 183402})
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "attachment": "okph2.eyJwIjoi",
+            "expiresAt": 1794586400,
+            "width": 1280,
+            "height": 960,
+            "size": 183402,
+        },
+    )
     res = upload_media.sync(
         client=account_client(rec),
         body=UploadMediaForm(file=File(payload=b"\xff\xd8\xff", file_name="photo.jpg", mime_type="image/jpeg")),
     )
 
     assert isinstance(res, UploadMediaResponse)
-    assert res.attachment == "okph1.eyJwIjoi"
+    assert res.attachment == "okph2.eyJwIjoi"
+    assert res.expires_at == 1794586400
     content_type = rec.requests[0].headers["Content-Type"]
     assert content_type.startswith("multipart/form-data; boundary=")
     assert b'name="file"; filename="photo.jpg"' in rec.requests[0].content
@@ -261,6 +291,7 @@ def test_an_album_photo_goes_with_its_description_in_one_form():
                 "width": 1200,
                 "height": 900,
             },
+            "duplicate": False,
         },
     )
     res = upload_group_album_photo.sync(
@@ -272,9 +303,10 @@ def test_an_album_photo_goes_with_its_description_in_one_form():
         ),
     )
 
-    assert isinstance(res, PhotoResponse)
+    assert isinstance(res, UploadPhotoResponse)
     assert res.photo.photo_id == "1011463854865"
     assert res.photo.description == "Куртка, 46"
+    assert res.duplicate is False
     req = rec.requests[0]
     assert req.url.path == "/groups/70000060985873/albums/1011463757073/photos"
     assert req.headers["Content-Type"].startswith("multipart/form-data; boundary=")
@@ -309,7 +341,15 @@ def test_an_album_list_leaves_the_settings_it_did_not_read_unset():
         200,
         {
             "success": True,
-            "albums": [{"albumId": "1011463757073", "groupId": 70000060985873, "title": "Товары", "photosCount": 2}],
+            "albums": [
+                {
+                    "albumId": "1011463757073",
+                    "groupId": 70000060985873,
+                    "title": "Товары",
+                    "photosCount": 2,
+                    "canUpload": True,
+                }
+            ],
         },
     )
     res = list_group_albums.sync(70000060985873, client=account_client(rec))
@@ -318,6 +358,8 @@ def test_an_album_list_leaves_the_settings_it_did_not_read_unset():
     album = res.albums[0]
     assert isinstance(album, Album)
     assert (album.album_id, album.group_id, album.photos_count) == ("1011463757073", 70000060985873, 2)
+    assert album.can_upload is True
+    assert res.next_cursor is UNSET
     assert album.pinned is UNSET and album.admins_only is UNSET and album.visibility is UNSET
 
 
@@ -330,6 +372,7 @@ def test_an_album_change_sends_only_the_fields_it_names():
                 "albumId": "1011463757073",
                 "groupId": 70000060985873,
                 "title": "Товары",
+                "canUpload": True,
                 "pinned": True,
                 "adminsOnly": False,
             },
@@ -343,6 +386,170 @@ def test_an_album_change_sends_only_the_fields_it_names():
     assert res.album.pinned is True and res.album.admins_only is False
     assert rec.requests[0].method == "PATCH"
     assert json.loads(rec.requests[0].content) == {"pinned": True}
+
+
+def test_a_repeated_ref_answers_the_photo_it_uploaded_as_a_duplicate():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "photo": {"photoId": "1011463854865", "albumId": "1011463757073", "description": "Куртка, 46"},
+            "duplicate": True,
+        },
+    )
+    res = upload_group_album_photo.sync(
+        70000060985873,
+        "1011463757073",
+        client=account_client(rec),
+        body=UploadAlbumPhotoForm(file=File(payload=b"\xff\xd8\xff", file_name="photo.jpg"), ref="order-17-photo-1"),
+    )
+
+    assert isinstance(res, UploadPhotoResponse)
+    assert res.duplicate is True and res.photo.photo_id == "1011463854865"
+    assert b'name="ref"' in rec.requests[0].content and b"order-17-photo-1" in rec.requests[0].content
+
+
+def test_a_batch_delete_answers_each_photo():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "results": [
+                {"photoId": "1011458234641", "status": "deleted"},
+                {"photoId": "1011458234648", "status": "not_found", "upstreamCode": "common.finder"},
+                {"photoId": "1011458234655", "status": "skipped", "code": "paused"},
+            ],
+            "pause": {"reason": "spam", "since": 1794500000, "upstreamCode": "flood"},
+        },
+    )
+    res = delete_group_album_photos.sync(
+        70000060985873,
+        "1011463757073",
+        client=account_client(rec),
+        body=DeleteAlbumPhotosRequest(photo_ids=["1011458234641", "1011458234648", "1011458234655"]),
+    )
+
+    assert isinstance(res, DeleteAlbumPhotosResponse)
+    assert [r.status for r in res.results] == [
+        DeletePhotoResultStatus.DELETED,
+        DeletePhotoResultStatus.NOT_FOUND,
+        DeletePhotoResultStatus.SKIPPED,
+    ]
+    assert res.results[1].upstream_code == "common.finder" and res.results[2].code == "paused"
+    assert res.pause.reason == PauseReason.SPAM
+    req = rec.requests[0]
+    assert (req.method, req.url.path) == ("POST", "/groups/70000060985873/albums/1011463757073/photos/delete")
+    assert json.loads(req.content) == {"photoIds": ["1011458234641", "1011458234648", "1011458234655"]}
+
+
+def test_several_chats_come_by_their_ids_with_whether_one_may_write():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "chats": [
+                {
+                    "chatId": -111031953413649,
+                    "type": "channel",
+                    "title": "News",
+                    "status": "active",
+                    "canWrite": False,
+                    "cantWriteReason": "not_admin",
+                    "groupId": 70000060985873,
+                    "lastEventAt": 1794500000000,
+                },
+                {
+                    "chatId": 352071101782,
+                    "type": "user",
+                    "title": "Anna",
+                    "status": "removed",
+                    "canWrite": True,
+                    "lastEventAt": 1794400000000,
+                },
+            ],
+            "missing": [12345],
+        },
+    )
+    res = list_chats.sync(client=account_client(rec), ids=[-111031953413649, 352071101782, 12345])
+
+    assert isinstance(res, ChatListResponse)
+    channel, dialog = res.chats
+    assert (channel.status, channel.can_write, channel.cant_write_reason) == (
+        ChatStatus.ACTIVE,
+        False,
+        ChatCantWriteReason.NOT_ADMIN,
+    )
+    assert channel.group_id == 70000060985873
+    assert (dialog.status, dialog.can_write, dialog.cant_write_reason) == (ChatStatus.REMOVED, True, UNSET)
+    assert res.missing == [12345]
+    # The gateway takes repeated ids as well as comma separated ones.
+    assert rec.requests[0].url.params.get_list("ids") == ["-111031953413649", "352071101782", "12345"]
+
+
+def test_groups_tell_the_users_role_and_a_groups_page_its_status():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "groups": [
+                {"groupId": 70000060985873, "name": "Interest group", "role": "moderator"},
+                {"groupId": 52693447475417, "name": "Music", "photoUrl": "https://i.okcdn.ru/g.jpg", "role": "member"},
+            ],
+        },
+    )
+    res = list_groups.sync(client=account_client(rec))
+    assert isinstance(res, GroupListResponse)
+    assert [g.role for g in res.groups] == [GroupRole.MODERATOR, GroupRole.MEMBER]
+    assert res.groups[0].photo_url is UNSET and res.groups[1].photo_url == "https://i.okcdn.ru/g.jpg"
+
+    rec = Recorder(200, {"success": True, "group": {"groupId": 1, "name": "", "status": "deleted"}})
+    res = get_group.sync(1, client=account_client(rec))
+    assert isinstance(res, GroupResponse)
+    assert res.group.status == GroupInfoStatus.DELETED and res.group.role is UNSET
+
+
+def test_an_album_list_pages_by_its_cursor():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "albums": [{"albumId": "personal", "title": "Личные фотографии", "canUpload": True, "personal": True}],
+            "nextCursor": "eyJrIjoidSJ9",
+        },
+    )
+    res = list_albums.sync(client=account_client(rec), limit=1, cursor="eyJrIjoidSJ9")
+
+    assert isinstance(res, AlbumListResponse)
+    assert res.next_cursor == "eyJrIjoidSJ9"
+    assert dict(rec.requests[0].url.params) == {"limit": "1", "cursor": "eyJrIjoidSJ9"}
+
+
+def test_the_session_counts_the_uploads():
+    rec = Recorder(
+        200,
+        {
+            "success": True,
+            "connected": True,
+            "loggedIn": True,
+            "uploads": {
+                "albumPhotos": {"last5Minutes": 3, "lastHour": 120, "lastDay": 2400},
+                "media": {"last5Minutes": 0, "lastHour": 4, "lastDay": 31},
+            },
+        },
+    )
+    res = get_session.sync(client=account_client(rec))
+
+    assert isinstance(res, SessionResponse)
+    assert (res.uploads.album_photos.last_5_minutes, res.uploads.album_photos.last_day) == (3, 2400)
+    assert res.uploads.media.last_hour == 4
+
+
+def test_a_request_bound_goes_as_a_header_of_the_client():
+    rec = Recorder(200, {"success": True, "chats": []})
+    client = account_client(rec).with_headers({"X-Okapi-Timeout": "5"})
+    list_chats.sync(client=client)
+
+    assert rec.requests[0].headers["X-Okapi-Timeout"] == "5"
 
 
 def test_a_qr_login_answers_the_qr_and_its_code():

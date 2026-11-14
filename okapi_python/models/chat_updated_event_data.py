@@ -17,7 +17,12 @@ T = TypeVar("T", bound="ChatUpdatedEventData")
 class ChatUpdatedEventData:
     """
     Attributes:
-        chat (Chat): A chat of the account.
+        chat (Chat): A chat of the account. `canWrite` is read from the chat as OK lists
+            it, by the rules of OK's web client: a chat that is not a dialog and
+            is not active, restrictions on input, a group chat whose members OK
+            listed in full without the account, a channel the account is neither
+            the owner nor a posting admin of. The other side of a dialog may
+            still refuse a send (`write_forbidden`).
     """
 
     chat: Chat

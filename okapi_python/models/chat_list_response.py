@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,12 +21,14 @@ class ChatListResponse:
     Attributes:
         success (bool):
         chats (list[Chat]):
-        next_cursor (str | Unset): The next page; absent on the last
+        next_cursor (str | Unset): The next page; absent on the last (and with `ids`)
+        missing (list[int] | Unset): With `ids` only, in the order asked; the ids OK did not show
     """
 
     success: bool
     chats: list[Chat]
     next_cursor: str | Unset = UNSET
+    missing: list[int] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,6 +41,10 @@ class ChatListResponse:
 
         next_cursor = self.next_cursor
 
+        missing: list[int] | Unset = UNSET
+        if not isinstance(self.missing, Unset):
+            missing = self.missing
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -49,6 +55,8 @@ class ChatListResponse:
         )
         if next_cursor is not UNSET:
             field_dict["nextCursor"] = next_cursor
+        if missing is not UNSET:
+            field_dict["missing"] = missing
 
         return field_dict
 
@@ -68,10 +76,13 @@ class ChatListResponse:
 
         next_cursor = d.pop("nextCursor", UNSET)
 
+        missing = cast(list[int], d.pop("missing", UNSET))
+
         chat_list_response = cls(
             success=success,
             chats=chats,
             next_cursor=next_cursor,
+            missing=missing,
         )
 
         chat_list_response.additional_properties = d

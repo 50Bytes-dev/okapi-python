@@ -9,8 +9,10 @@ from .album_list_response import AlbumListResponse
 from .album_response import AlbumResponse
 from .album_visibility import AlbumVisibility
 from .chat import Chat
+from .chat_cant_write_reason import ChatCantWriteReason
 from .chat_list_response import ChatListResponse
 from .chat_response import ChatResponse
+from .chat_status import ChatStatus
 from .chat_type import ChatType
 from .chat_updated_event import ChatUpdatedEvent
 from .chat_updated_event_data import ChatUpdatedEventData
@@ -21,10 +23,14 @@ from .create_account_request import CreateAccountRequest
 from .create_account_response import CreateAccountResponse
 from .create_album_request import CreateAlbumRequest
 from .create_group_album_request import CreateGroupAlbumRequest
+from .delete_album_photos_request import DeleteAlbumPhotosRequest
+from .delete_album_photos_response import DeleteAlbumPhotosResponse
 from .delete_message_result import DeleteMessageResult
 from .delete_message_result_status import DeleteMessageResultStatus
 from .delete_messages_request import DeleteMessagesRequest
 from .delete_messages_response import DeleteMessagesResponse
+from .delete_photo_result import DeletePhotoResult
+from .delete_photo_result_status import DeletePhotoResultStatus
 from .disconnected_event import DisconnectedEvent
 from .disconnected_event_data import DisconnectedEventData
 from .edit_message_request import EditMessageRequest
@@ -33,7 +39,11 @@ from .event_chat import EventChat
 from .event_envelope import EventEnvelope
 from .event_type import EventType
 from .group import Group
+from .group_info import GroupInfo
+from .group_info_status import GroupInfoStatus
 from .group_list_response import GroupListResponse
+from .group_response import GroupResponse
+from .group_role import GroupRole
 from .health_response import HealthResponse
 from .health_response_status import HealthResponseStatus
 from .history_response import HistoryResponse
@@ -89,9 +99,12 @@ from .update_album_request import UpdateAlbumRequest
 from .update_group_album_request import UpdateGroupAlbumRequest
 from .upload_album_photo_form import UploadAlbumPhotoForm
 from .upload_album_photo_request import UploadAlbumPhotoRequest
+from .upload_counts import UploadCounts
 from .upload_media_form import UploadMediaForm
 from .upload_media_request import UploadMediaRequest
 from .upload_media_response import UploadMediaResponse
+from .upload_photo_response import UploadPhotoResponse
+from .uploads import Uploads
 from .user import User
 from .user_list_response import UserListResponse
 from .user_response import UserResponse
@@ -108,8 +121,10 @@ __all__ = (
     "AlbumResponse",
     "AlbumVisibility",
     "Chat",
+    "ChatCantWriteReason",
     "ChatListResponse",
     "ChatResponse",
+    "ChatStatus",
     "ChatType",
     "ChatUpdatedEvent",
     "ChatUpdatedEventData",
@@ -120,10 +135,14 @@ __all__ = (
     "CreateAccountResponse",
     "CreateAlbumRequest",
     "CreateGroupAlbumRequest",
+    "DeleteAlbumPhotosRequest",
+    "DeleteAlbumPhotosResponse",
     "DeleteMessageResult",
     "DeleteMessageResultStatus",
     "DeleteMessagesRequest",
     "DeleteMessagesResponse",
+    "DeletePhotoResult",
+    "DeletePhotoResultStatus",
     "DisconnectedEvent",
     "DisconnectedEventData",
     "EditMessageRequest",
@@ -132,7 +151,11 @@ __all__ = (
     "EventEnvelope",
     "EventType",
     "Group",
+    "GroupInfo",
+    "GroupInfoStatus",
     "GroupListResponse",
+    "GroupResponse",
+    "GroupRole",
     "HealthResponse",
     "HealthResponseStatus",
     "HistoryResponse",
@@ -188,9 +211,12 @@ __all__ = (
     "UpdateGroupAlbumRequest",
     "UploadAlbumPhotoForm",
     "UploadAlbumPhotoRequest",
+    "UploadCounts",
     "UploadMediaForm",
     "UploadMediaRequest",
     "UploadMediaResponse",
+    "UploadPhotoResponse",
+    "Uploads",
     "User",
     "UserListResponse",
     "UserResponse",

@@ -19,16 +19,20 @@ class UploadAlbumPhotoForm:
     Attributes:
         file (File):
         description (str | Unset): The photo's text, at most 4096 UTF-16 units
+        ref (str | Unset): Your idempotency key, at most 128 bytes; a repeat never uploads a second photo
     """
 
     file: File
     description: str | Unset = UNSET
+    ref: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         file = self.file.to_tuple()
 
         description = self.description
+
+        ref = self.ref
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -39,6 +43,8 @@ class UploadAlbumPhotoForm:
         )
         if description is not UNSET:
             field_dict["description"] = description
+        if ref is not UNSET:
+            field_dict["ref"] = ref
 
         return field_dict
 
@@ -49,6 +55,9 @@ class UploadAlbumPhotoForm:
 
         if not isinstance(self.description, Unset):
             files.append(("description", (None, str(self.description).encode(), "text/plain")))
+
+        if not isinstance(self.ref, Unset):
+            files.append(("ref", (None, str(self.ref).encode(), "text/plain")))
 
         for prop_name, prop in self.additional_properties.items():
             files.append((prop_name, (None, str(prop).encode(), "text/plain")))
@@ -62,9 +71,12 @@ class UploadAlbumPhotoForm:
 
         description = d.pop("description", UNSET)
 
+        ref = d.pop("ref", UNSET)
+
         upload_album_photo_form = cls(
             file=file,
             description=description,
+            ref=ref,
         )
 
         upload_album_photo_form.additional_properties = d

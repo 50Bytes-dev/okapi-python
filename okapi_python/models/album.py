@@ -23,6 +23,10 @@ class Album:
         Attributes:
             album_id (str): OK's album id as digits, or `personal` Example: 1011458223377.
             title (str):  Example: Spring collection.
+            can_upload (bool): The account may upload into the album: always into the user's
+                own; into a group's, as OK's list of the group's albums tells it
+                (a moderator everywhere, a member where the album is open to
+                members)
             group_id (int | Unset): The group of a group's album Example: 70000060985873.
             photos_count (int | Unset): Photos in the album, when OK tells it Example: 12.
             visibility (list[AlbumVisibility] | Unset): Who sees a user's album (not the personal one's); not in a list
@@ -35,6 +39,7 @@ class Album:
 
     album_id: str
     title: str
+    can_upload: bool
     group_id: int | Unset = UNSET
     photos_count: int | Unset = UNSET
     visibility: list[AlbumVisibility] | Unset = UNSET
@@ -47,6 +52,8 @@ class Album:
         album_id = self.album_id
 
         title = self.title
+
+        can_upload = self.can_upload
 
         group_id = self.group_id
 
@@ -71,6 +78,7 @@ class Album:
             {
                 "albumId": album_id,
                 "title": title,
+                "canUpload": can_upload,
             }
         )
         if group_id is not UNSET:
@@ -95,6 +103,8 @@ class Album:
 
         title = d.pop("title")
 
+        can_upload = d.pop("canUpload")
+
         group_id = d.pop("groupId", UNSET)
 
         photos_count = d.pop("photosCount", UNSET)
@@ -117,6 +127,7 @@ class Album:
         album = cls(
             album_id=album_id,
             title=title,
+            can_upload=can_upload,
             group_id=group_id,
             photos_count=photos_count,
             visibility=visibility,

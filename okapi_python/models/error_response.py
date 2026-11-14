@@ -26,7 +26,9 @@ class ErrorResponse:
             this account write.
         upstream_code (str | Unset): OK's error string as OK gave it Example: chat.denied.
         pause (Pause | Unset): The pause of the OK user. `reason`: `spam` (OK's antispam or flood
-            refusal), `restricted` (OK restricted sending). Lifted only by
+            refusal), `restricted` (OK restricted sending), `captcha` (ok.ru sent a
+            request to its captcha: pass it in a browser of the user, then
+            resume; `upstreamCode` is empty). Lifted only by
             `POST /session/resume`.
         rejected_attachments (list[int] | Unset): `attachment_rejected`: the indexes of the unusable attachments
             Example: [1].

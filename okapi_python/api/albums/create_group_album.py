@@ -133,7 +133,8 @@ def sync_detailed(
 
      Creates an album of the group. `pinned` (shown first) is off and `adminsOnly` (only the group's
     administration adds photos) is on when left out, as on OK's desktop form. Only a moderator of the
-    group (`moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call to OK.
+    group (`role: moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call
+    to OK.
 
     Args:
         group_id (int):
@@ -169,7 +170,8 @@ def sync(
 
      Creates an album of the group. `pinned` (shown first) is off and `adminsOnly` (only the group's
     administration adds photos) is on when left out, as on OK's desktop form. Only a moderator of the
-    group (`moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call to OK.
+    group (`role: moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call
+    to OK.
 
     Args:
         group_id (int):
@@ -200,7 +202,8 @@ async def asyncio_detailed(
 
      Creates an album of the group. `pinned` (shown first) is off and `adminsOnly` (only the group's
     administration adds photos) is on when left out, as on OK's desktop form. Only a moderator of the
-    group (`moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call to OK.
+    group (`role: moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call
+    to OK.
 
     Args:
         group_id (int):
@@ -234,7 +237,8 @@ async def asyncio(
 
      Creates an album of the group. `pinned` (shown first) is off and `adminsOnly` (only the group's
     administration adds photos) is on when left out, as on OK's desktop form. Only a moderator of the
-    group (`moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call to OK.
+    group (`role: moderator` in `GET /groups`) may: anyone else is `403 write_forbidden` without a call
+    to OK.
 
     Args:
         group_id (int):

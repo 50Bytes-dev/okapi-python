@@ -14,8 +14,10 @@ class UploadMediaResponse:
     """
     Attributes:
         success (bool):
-        attachment (str): The handle for `POST /messages` (`okph1.…`), valid in any chat of the same OK user Example:
-            okph1.eyJwIjoi….
+        attachment (str): The handle for `POST /messages` (`okph2.…`), valid in any chat of the same OK user until
+            `expiresAt` Example: okph2.eyJwIjoi….
+        expires_at (int): Unix seconds from which a send refuses the handle (`attachment_rejected`) without calling OK;
+            `OKAPI_MEDIA_HANDLE_TTL` (24 h) after the upload Example: 1794586400.
         width (int): Pixels of the photo as uploaded Example: 1280.
         height (int):  Example: 960.
         size (int): Bytes uploaded Example: 183402.
@@ -23,6 +25,7 @@ class UploadMediaResponse:
 
     success: bool
     attachment: str
+    expires_at: int
     width: int
     height: int
     size: int
@@ -32,6 +35,8 @@ class UploadMediaResponse:
         success = self.success
 
         attachment = self.attachment
+
+        expires_at = self.expires_at
 
         width = self.width
 
@@ -45,6 +50,7 @@ class UploadMediaResponse:
             {
                 "success": success,
                 "attachment": attachment,
+                "expiresAt": expires_at,
                 "width": width,
                 "height": height,
                 "size": size,
@@ -60,6 +66,8 @@ class UploadMediaResponse:
 
         attachment = d.pop("attachment")
 
+        expires_at = d.pop("expiresAt")
+
         width = d.pop("width")
 
         height = d.pop("height")
@@ -69,6 +77,7 @@ class UploadMediaResponse:
         upload_media_response = cls(
             success=success,
             attachment=attachment,
+            expires_at=expires_at,
             width=width,
             height=height,
             size=size,

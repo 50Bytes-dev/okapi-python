@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.album import Album
 
@@ -19,10 +21,12 @@ class AlbumListResponse:
     Attributes:
         success (bool):
         albums (list[Album]):
+        next_cursor (str | Unset): The next page; absent on the last
     """
 
     success: bool
     albums: list[Album]
+    next_cursor: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -33,6 +37,8 @@ class AlbumListResponse:
             albums_item = albums_item_data.to_dict()
             albums.append(albums_item)
 
+        next_cursor = self.next_cursor
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -41,6 +47,8 @@ class AlbumListResponse:
                 "albums": albums,
             }
         )
+        if next_cursor is not UNSET:
+            field_dict["nextCursor"] = next_cursor
 
         return field_dict
 
@@ -58,9 +66,12 @@ class AlbumListResponse:
 
             albums.append(albums_item)
 
+        next_cursor = d.pop("nextCursor", UNSET)
+
         album_list_response = cls(
             success=success,
             albums=albums,
+            next_cursor=next_cursor,
         )
 
         album_list_response.additional_properties = d

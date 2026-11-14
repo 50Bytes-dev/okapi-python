@@ -124,7 +124,7 @@ def sync_detailed(
 ) -> Response[ErrorResponse | SuccessResponse]:
     """Delete a group album
 
-     Deletes the album **with all its photos**. Only a moderator of the group (`moderator` in `GET
+     Deletes the album **with all its photos**. Only a moderator of the group (`role: moderator` in `GET
     /groups`) may: anyone else is `403 write_forbidden` without a call to OK. The album is read first:
     OK answers the delete of an album that is not there as done, the gateway `404 not_found`.
 
@@ -160,7 +160,7 @@ def sync(
 ) -> ErrorResponse | SuccessResponse | None:
     """Delete a group album
 
-     Deletes the album **with all its photos**. Only a moderator of the group (`moderator` in `GET
+     Deletes the album **with all its photos**. Only a moderator of the group (`role: moderator` in `GET
     /groups`) may: anyone else is `403 write_forbidden` without a call to OK. The album is read first:
     OK answers the delete of an album that is not there as done, the gateway `404 not_found`.
 
@@ -191,7 +191,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorResponse | SuccessResponse]:
     """Delete a group album
 
-     Deletes the album **with all its photos**. Only a moderator of the group (`moderator` in `GET
+     Deletes the album **with all its photos**. Only a moderator of the group (`role: moderator` in `GET
     /groups`) may: anyone else is `403 write_forbidden` without a call to OK. The album is read first:
     OK answers the delete of an album that is not there as done, the gateway `404 not_found`.
 
@@ -225,7 +225,7 @@ async def asyncio(
 ) -> ErrorResponse | SuccessResponse | None:
     """Delete a group album
 
-     Deletes the album **with all its photos**. Only a moderator of the group (`moderator` in `GET
+     Deletes the album **with all its photos**. Only a moderator of the group (`role: moderator` in `GET
     /groups`) may: anyone else is `403 write_forbidden` without a call to OK. The album is read first:
     OK answers the delete of an album that is not there as done, the gateway `404 not_found`.
 

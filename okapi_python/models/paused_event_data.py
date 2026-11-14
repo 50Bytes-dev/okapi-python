@@ -18,7 +18,9 @@ class PausedEventData:
     """
     Attributes:
         pause (Pause): The pause of the OK user. `reason`: `spam` (OK's antispam or flood
-            refusal), `restricted` (OK restricted sending). Lifted only by
+            refusal), `restricted` (OK restricted sending), `captcha` (ok.ru sent a
+            request to its captcha: pass it in a browser of the user, then
+            resume; `upstreamCode` is empty). Lifted only by
             `POST /session/resume`.
     """
 

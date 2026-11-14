@@ -7,9 +7,9 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.photo_response import PhotoResponse
 from ...models.upload_album_photo_form import UploadAlbumPhotoForm
 from ...models.upload_album_photo_request import UploadAlbumPhotoRequest
+from ...models.upload_photo_response import UploadPhotoResponse
 from ...types import UNSET, Response, Unset
 
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | PhotoResponse | None:
+) -> ErrorResponse | UploadPhotoResponse | None:
     if response.status_code == 200:
-        response_200 = PhotoResponse.from_dict(response.json())
+        response_200 = UploadPhotoResponse.from_dict(response.json())
 
         return response_200
 
@@ -129,7 +129,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | PhotoResponse]:
+) -> Response[ErrorResponse | UploadPhotoResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -143,7 +143,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
-) -> Response[ErrorResponse | PhotoResponse]:
+) -> Response[ErrorResponse | UploadPhotoResponse]:
     """Upload a photo into an album
 
      Uploads a photo into the album and sets its `description` when one is
@@ -163,9 +163,18 @@ def sync_detailed(
     the answer is `502 description_failed` with the `photoId`: set the text
     again with `PATCH`, do not upload again.
 
-    There is no `ref`: after `504 timeout`, list the album to see whether the
-    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
-    `429 photo_limit`; the gateway keeps no pace of its own.
+    Give an upload a `ref` (your idempotency key, up to 128 bytes, a
+    multipart field or a JSON field): a repeat of it never uploads a second
+    photo. A repeat of an upload whose photo was added answers that photo
+    as first answered, with `duplicate: true`, even when it was deleted
+    since (setting its description first, when that
+    failed before); one whose first ended without an answer (`504 timeout`)
+    looks for the photo in the album, by the id OK allocated it before the
+    image was sent, and uploads again only when it is not there. The same
+    `ref` with another album is `400 invalid_input`. A ref is remembered for
+    7 days. Without a ref, list the album after a `504 timeout` to see
+    whether the photo came. OK's own limit on new photos (1000 in 5 min,
+    10000 a day) is `429 photo_limit`; the gateway keeps no pace of its own.
 
     Args:
         album_id (str):
@@ -177,7 +186,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | PhotoResponse]
+        Response[ErrorResponse | UploadPhotoResponse]
     """
 
     kwargs = _get_kwargs(
@@ -197,7 +206,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
-) -> ErrorResponse | PhotoResponse | None:
+) -> ErrorResponse | UploadPhotoResponse | None:
     """Upload a photo into an album
 
      Uploads a photo into the album and sets its `description` when one is
@@ -217,9 +226,18 @@ def sync(
     the answer is `502 description_failed` with the `photoId`: set the text
     again with `PATCH`, do not upload again.
 
-    There is no `ref`: after `504 timeout`, list the album to see whether the
-    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
-    `429 photo_limit`; the gateway keeps no pace of its own.
+    Give an upload a `ref` (your idempotency key, up to 128 bytes, a
+    multipart field or a JSON field): a repeat of it never uploads a second
+    photo. A repeat of an upload whose photo was added answers that photo
+    as first answered, with `duplicate: true`, even when it was deleted
+    since (setting its description first, when that
+    failed before); one whose first ended without an answer (`504 timeout`)
+    looks for the photo in the album, by the id OK allocated it before the
+    image was sent, and uploads again only when it is not there. The same
+    `ref` with another album is `400 invalid_input`. A ref is remembered for
+    7 days. Without a ref, list the album after a `504 timeout` to see
+    whether the photo came. OK's own limit on new photos (1000 in 5 min,
+    10000 a day) is `429 photo_limit`; the gateway keeps no pace of its own.
 
     Args:
         album_id (str):
@@ -231,7 +249,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | PhotoResponse
+        ErrorResponse | UploadPhotoResponse
     """
 
     return sync_detailed(
@@ -246,7 +264,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
-) -> Response[ErrorResponse | PhotoResponse]:
+) -> Response[ErrorResponse | UploadPhotoResponse]:
     """Upload a photo into an album
 
      Uploads a photo into the album and sets its `description` when one is
@@ -266,9 +284,18 @@ async def asyncio_detailed(
     the answer is `502 description_failed` with the `photoId`: set the text
     again with `PATCH`, do not upload again.
 
-    There is no `ref`: after `504 timeout`, list the album to see whether the
-    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
-    `429 photo_limit`; the gateway keeps no pace of its own.
+    Give an upload a `ref` (your idempotency key, up to 128 bytes, a
+    multipart field or a JSON field): a repeat of it never uploads a second
+    photo. A repeat of an upload whose photo was added answers that photo
+    as first answered, with `duplicate: true`, even when it was deleted
+    since (setting its description first, when that
+    failed before); one whose first ended without an answer (`504 timeout`)
+    looks for the photo in the album, by the id OK allocated it before the
+    image was sent, and uploads again only when it is not there. The same
+    `ref` with another album is `400 invalid_input`. A ref is remembered for
+    7 days. Without a ref, list the album after a `504 timeout` to see
+    whether the photo came. OK's own limit on new photos (1000 in 5 min,
+    10000 a day) is `429 photo_limit`; the gateway keeps no pace of its own.
 
     Args:
         album_id (str):
@@ -280,7 +307,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | PhotoResponse]
+        Response[ErrorResponse | UploadPhotoResponse]
     """
 
     kwargs = _get_kwargs(
@@ -298,7 +325,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UploadAlbumPhotoForm | UploadAlbumPhotoRequest | Unset = UNSET,
-) -> ErrorResponse | PhotoResponse | None:
+) -> ErrorResponse | UploadPhotoResponse | None:
     """Upload a photo into an album
 
      Uploads a photo into the album and sets its `description` when one is
@@ -318,9 +345,18 @@ async def asyncio(
     the answer is `502 description_failed` with the `photoId`: set the text
     again with `PATCH`, do not upload again.
 
-    There is no `ref`: after `504 timeout`, list the album to see whether the
-    photo came. OK's own limit on new photos (1000 in 5 min, 10000 a day) is
-    `429 photo_limit`; the gateway keeps no pace of its own.
+    Give an upload a `ref` (your idempotency key, up to 128 bytes, a
+    multipart field or a JSON field): a repeat of it never uploads a second
+    photo. A repeat of an upload whose photo was added answers that photo
+    as first answered, with `duplicate: true`, even when it was deleted
+    since (setting its description first, when that
+    failed before); one whose first ended without an answer (`504 timeout`)
+    looks for the photo in the album, by the id OK allocated it before the
+    image was sent, and uploads again only when it is not there. The same
+    `ref` with another album is `400 invalid_input`. A ref is remembered for
+    7 days. Without a ref, list the album after a `504 timeout` to see
+    whether the photo came. OK's own limit on new photos (1000 in 5 min,
+    10000 a day) is `429 photo_limit`; the gateway keeps no pace of its own.
 
     Args:
         album_id (str):
@@ -332,7 +368,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | PhotoResponse
+        ErrorResponse | UploadPhotoResponse
     """
 
     return (
