@@ -19,7 +19,8 @@ class LoggedOutEvent:
     """The stored login ended; the account stays. Not sent for the
     account's own logout or disconnect. `reason`: `revoked` (the
     cookies no longer give a messenger token: the login was ended on
-    OK, e.g. by signing out of all sessions or a password change),
+    OK, e.g. by signing out of all sessions or a password change; a
+    stored login the gateway cannot read ends the same way),
     `verification_required` (OK asks the user to confirm the login),
     `blocked` (OK blocked the user: the login of every account of that
     OK user is erased, each gets its own event).

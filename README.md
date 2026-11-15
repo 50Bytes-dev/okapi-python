@@ -4,7 +4,7 @@ personal OK.ru (Odnoklassniki) accounts and works from them through OK's web mes
 scanned in the OK app; sending text and photos to people and chats with idempotency by `ref`; editing and deleting
 messages; history, read marks, typing; chats, their members, users; photo albums of the account and of the groups it
 belongs to, with photos and their descriptions; and incoming events as signed webhooks. One gateway serves many
-accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.3.1).
+accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.4.0).
 
 The package is generated from the gateway's OpenAPI schema (`static/api/spec.yml` in okapi; the gateway serves it at
 `/api/spec.yml`, with the Swagger UI at `/api/`). The full contract, with every code and when it comes, is
