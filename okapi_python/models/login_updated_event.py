@@ -16,15 +16,16 @@ T = TypeVar("T", bound="LoginUpdatedEvent")
 
 @_attrs_define
 class LoginUpdatedEvent:
-    """Every change of the login: QR shown or renewed, done, failed. Carries the account's own QR.
+    """Every change of the login: QR shown or renewed, SMS code asked, sent again or refused (step `code`), done, failed.
+    Carries the account's own QR.
 
-    Attributes:
-        id (UUID): The event id, the same on every retry; dedupe by it
-        type_ (Literal['LoginUpdated']): The event type (`EventType`); each event fixes its own
-        account_id (UUID):
-        account_name (str):
-        timestamp (int): Unix time in seconds of the event Example: 1794500000.
-        data (LoginUpdatedEventData): The event's data, an object; each event gives its shape
+        Attributes:
+            id (UUID): The event id, the same on every retry; dedupe by it
+            type_ (Literal['LoginUpdated']): The event type (`EventType`); each event fixes its own
+            account_id (UUID):
+            account_name (str):
+            timestamp (int): Unix time in seconds of the event Example: 1794500000.
+            data (LoginUpdatedEventData): The event's data, an object; each event gives its shape
     """
 
     id: UUID

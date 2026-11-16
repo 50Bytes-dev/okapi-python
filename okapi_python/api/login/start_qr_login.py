@@ -96,7 +96,9 @@ def sync_detailed(
     login there. **Check that the 4-digit code the app shows is `code`**
     before confirming: it ties the scan to this QR. The login then
     becomes `done` and the session connects (`Connected`); unconfirmed
-    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`.
+    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`. A profile with OK's
+    two-factor protection goes to step `code` after the confirmation:
+    OK sends a code by SMS, given with `POST /session/login/code`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -127,7 +129,9 @@ def sync(
     login there. **Check that the 4-digit code the app shows is `code`**
     before confirming: it ties the scan to this QR. The login then
     becomes `done` and the session connects (`Connected`); unconfirmed
-    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`.
+    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`. A profile with OK's
+    two-factor protection goes to step `code` after the confirmation:
+    OK sends a code by SMS, given with `POST /session/login/code`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -154,7 +158,9 @@ async def asyncio_detailed(
     login there. **Check that the 4-digit code the app shows is `code`**
     before confirming: it ties the scan to this QR. The login then
     becomes `done` and the session connects (`Connected`); unconfirmed
-    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`.
+    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`. A profile with OK's
+    two-factor protection goes to step `code` after the confirmation:
+    OK sends a code by SMS, given with `POST /session/login/code`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -183,7 +189,9 @@ async def asyncio(
     login there. **Check that the 4-digit code the app shows is `code`**
     before confirming: it ties the scan to this QR. The login then
     becomes `done` and the session connects (`Connected`); unconfirmed
-    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`.
+    within `OKAPI_LOGIN_TIMEOUT` it fails `expired`. A profile with OK's
+    two-factor protection goes to step `code` after the confirmation:
+    OK sends a code by SMS, given with `POST /session/login/code`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

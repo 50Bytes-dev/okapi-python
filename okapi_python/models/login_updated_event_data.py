@@ -18,8 +18,9 @@ class LoginUpdatedEventData:
     """
     Attributes:
         login (Login): The login into OK. `step`: `none` (no login ran), `qr` (scan `qr`
-            and confirm in the OK app), `done` (`okUser`; `Connected` follows),
-            `failed` (`failure`).
+            and confirm in the OK app), `code` (the profile has OK's two-factor
+            protection: give the SMS code, `sms`), `done` (`okUser`;
+            `Connected` follows), `failed` (`failure`).
     """
 
     login: Login

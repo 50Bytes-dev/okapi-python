@@ -4,7 +4,7 @@ personal OK.ru (Odnoklassniki) accounts and works from them through OK's web mes
 scanned in the OK app; sending text and photos to people and chats with idempotency by `ref`; editing and deleting
 messages; history, read marks, typing; chats, their members, users; photo albums of the account and of the groups it
 belongs to, with photos and their descriptions; and incoming events as signed webhooks. One gateway serves many
-accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.4.0).
+accounts; an account is a token, a webhook, a proxy and one OK login. This package follows okapi's version (0.5.0).
 
 The package is generated from the gateway's OpenAPI schema (`static/api/spec.yml` in okapi; the gateway serves it at
 `/api/spec.yml`, with the Swagger UI at `/api/`). The full contract, with every code and when it comes, is
@@ -55,10 +55,12 @@ answers `504 timeout` past it. Its own budgets:
 | `list_groups` | 10 s for every page of OK's two group lists |
 | `delete_album_photos`, `delete_group_album_photos` | up to 120 s; the photos past it are `skipped` |
 | `start_qr_login` | waits for ok.ru to give a QR, bounded only by `OKAPI_LOGIN_TIMEOUT` (10 min by default) |
+| `submit_login_code` | ok.ru's answer to the code, then the messenger's first connect: up to about 60 s |
 
 The gateway's HTTP server reads a request within 120 s and writes its answer within 300 s.
 
-A timeout of 30 s covers a send and the calls of one or two OK calls. Give `upload_media`, `start_qr_login` and a
+A timeout of 30 s covers a send and the calls of one or two OK calls. Give `upload_media`, `start_qr_login`,
+`submit_login_code` and a
 `list_chats` with `type_` or `q` a client of their own with a longer timeout:
 
 ```python
@@ -99,6 +101,8 @@ returns a `Response` with `status_code` and `parsed`.
 | `api.login.get_login` | `GET /session/login` |
 | `api.login.cancel_login` | `DELETE /session/login` |
 | `api.login.start_qr_login` | `POST /session/login/qr` |
+| `api.login.submit_login_code` | `POST /session/login/code` |
+| `api.login.resend_login_code` | `POST /session/login/code/resend` |
 | `api.webhook.get_webhook` | `GET /webhook` |
 | `api.webhook.set_webhook` | `PUT /webhook` |
 | `api.webhook.delete_webhook` | `DELETE /webhook` |
@@ -195,7 +199,8 @@ delete_account.sync(created.account.id, client=admin)
 ```
 
 ## Log in by QR code
-OK's own QR login of ok.ru, confirmed in the OK app. There is no phone or password login.
+OK's own QR login of ok.ru, confirmed in the OK app. There is no phone or password login. A profile with OK's
+two-factor protection also needs the code OK sends by SMS (step `code`, below).
 
 ```python
 from okapi_python.api.login import get_login, start_qr_login
@@ -215,6 +220,8 @@ tell_owner(qr.code)  # your code: confirm in the app only if it shows this 4-dig
 login = get_login.sync(client=account).login
 if login.step == LoginStep.DONE:  # the session connects; Connected follows
     print("logged in as", login.ok_user.name)
+elif login.step == LoginStep.CODE:  # two-factor protection: OK sent a code by SMS
+    print("code sent to", login.sms.sent_to)  # masked as OK shows it, e.g. +7********12
 elif login.step == LoginStep.FAILED:
     print("login failed:", login.failure.reason)  # expired, cancelled, unavailable, verification_required, failed
 
@@ -223,8 +230,28 @@ print(session.logged_in, session.connected, session.pause)
 ```
 
 A login not confirmed within `OKAPI_LOGIN_TIMEOUT` (10 min by default, `login.expires_at`) fails `expired`.
-`api.login.cancel_login` cancels a running one. The QR, its link and its code are the only login data the gateway
-ever shows, and only to the account itself.
+`api.login.cancel_login` cancels a running one. The QR, its link and its code, and the masked number of a
+two-factor SMS, are the only login data the gateway ever shows, and only to the account itself.
+
+### Two-factor protection
+
+After the confirmation the gateway asks OK for the SMS itself; the login waits at step `code`:
+
+```python
+from okapi_python.api.login import resend_login_code, submit_login_code
+from okapi_python.models import LoginCodeRequest
+
+res = submit_login_code.sync(client=slow, body=LoginCodeRequest(code=ask_owner_for_code()))
+if isinstance(res, ErrorResponse):
+    # wrong_code (422): OK did not take it, the login waits for another (login.sms.wrong_codes)
+    # code_not_expected (409): the login is not at step code
+    raise RuntimeError(res.code)
+print(res.login.step)  # done (Connected follows) or failed
+
+# OK delivers the same code again; earlier than login.sms.resend_at (60 s) it is
+# resend_too_early (429) with retry_after_ms, and nothing reaches ok.ru.
+resend_login_code.sync(client=account)
+```
 
 `api.session.connect` starts the stored login's session (and keeps it up across restarts), `disconnect` closes it
 (the login stays stored), `logout` erases the stored login.

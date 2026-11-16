@@ -27,8 +27,9 @@ class SessionResponse:
         connected (bool): The messenger session is connected
         ok_user (OkUser | Unset): The OK user the account is logged into
         login (Login | Unset): The login into OK. `step`: `none` (no login ran), `qr` (scan `qr`
-            and confirm in the OK app), `done` (`okUser`; `Connected` follows),
-            `failed` (`failure`).
+            and confirm in the OK app), `code` (the profile has OK's two-factor
+            protection: give the SMS code, `sms`), `done` (`okUser`;
+            `Connected` follows), `failed` (`failure`).
         pause (Pause | Unset): The pause of the OK user. `reason`: `spam` (OK's antispam or flood
             refusal), `restricted` (OK restricted sending), `captcha` (ok.ru sent a
             request to its captcha: pass it in a browser of the user, then

@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class LoginStep(str, Enum):
+    CODE = "code"
     DONE = "done"
     FAILED = "failed"
     NONE = "none"
